@@ -1,0 +1,342 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// All-In-One: MACD MTF + iFVG/BPR + Trendlines with Breaks
+// ───────────────────────────────────────────────────────────────────────────
+// Combina tres indicadores:
+//   · CM_MacD_Ult_MTF        — ChrisMoody (adaptado a v5)
+//   · iFVG (BPR)             — © Algoryze  (adaptado a v5)
+//   · Trendlines with Breaks — © LuxAlgo   (v5 sin cambios)
+// ═══════════════════════════════════════════════════════════════════════════
+//@version=5
+indicator("AIO: MACD + iFVG/BPR + Trendlines",
+     shorttitle        = "AIO Trading",
+     overlay           = true,
+     max_boxes_count   = 500,
+     max_labels_count  = 500,
+     max_lines_count   = 500,
+     max_bars_back     = 500)
+
+// ───────────────────────────────────────────────────────────────────────────
+// ► SECCIÓN 1 — MACD MULTI-TIMEFRAME
+//   Basado en CM_MacD_Ult_MTF de ChrisMoody.
+//   En overlay=true el MACD no se dibuja como oscilador; en su lugar colorea
+//   las barras según dirección y muestra flechas en el cruce MACD/Señal.
+// ───────────────────────────────────────────────────────────────────────────
+grpMACD = "── MACD Multi-Timeframe ──"
+
+showMACD      = input.bool(true,  "Activar MACD",                   group = grpMACD)
+useCurrentRes = input.bool(true,  "Usar temporalidad del gráfico",  group = grpMACD)
+resCustom     = input.timeframe("60", "Temporalidad personalizada", group = grpMACD)
+fastLen       = input.int(12, "EMA rápida",    minval = 1,          group = grpMACD)
+slowLen       = input.int(26, "EMA lenta",     minval = 1,          group = grpMACD)
+signalLen     = input.int(9,  "Señal (SMA)",   minval = 1,          group = grpMACD)
+colorBars     = input.bool(true,  "Colorear barras con MACD",       group = grpMACD)
+showCrossDots = input.bool(true,  "Mostrar flechas en cruce",       group = grpMACD)
+
+macdRes = useCurrentRes ? timeframe.period : resCustom
+
+// Cálculo con request.security usando valores primitivos (compatible v5)
+getMacdPrimitives() =>
+    fast   = ta.ema(close, fastLen)
+    slow_  = ta.ema(close, slowLen)
+    _macd  = fast - slow_
+    _sig   = ta.sma(_macd, signalLen)
+    _hist  = _macd - _sig
+    [_macd, _sig, _hist]
+
+[outMacd, outSig, outHist] = request.security(syminfo.tickerid, macdRes, getMacdPrimitives())
+
+macdAbove  = outMacd >= outSig
+histUpPos  = outHist > outHist[1] and outHist > 0   // histograma sube, zona +
+histDnPos  = outHist < outHist[1] and outHist > 0   // histograma baja, zona +
+histDnNeg  = outHist < outHist[1] and outHist <= 0  // histograma baja, zona -
+histUpNeg  = outHist > outHist[1] and outHist <= 0  // histograma sube, zona -
+
+// Color de barras (4 estados del histograma)
+macdColor =
+     histUpPos ? color.new(color.aqua,  40) :
+     histDnPos ? color.new(color.blue,  50) :
+     histDnNeg ? color.new(color.red,   40) :
+                 color.new(color.maroon,50)
+
+barcolor(showMACD and colorBars ? macdColor : na)
+
+// Flechas en cruce
+macdCross     = ta.cross(outMacd, outSig)
+crossUp       = macdCross and macdAbove
+crossDown     = macdCross and not macdAbove
+
+plotshape(showMACD and showCrossDots and crossUp   ? low  : na,
+     "MACD Cross ▲", shape.triangleup,   location.belowbar,
+     color.lime,  size = size.tiny)
+plotshape(showMACD and showCrossDots and crossDown ? high : na,
+     "MACD Cross ▼", shape.triangledown, location.abovebar,
+     color.red,   size = size.tiny)
+
+alertcondition(crossUp,   "MACD Cruce Alcista", "MACD cruzó la señal hacia arriba")
+alertcondition(crossDown, "MACD Cruce Bajista", "MACD cruzó la señal hacia abajo")
+
+
+// ───────────────────────────────────────────────────────────────────────────
+// ► SECCIÓN 2 — TRENDLINES WITH BREAKS  (© LuxAlgo)
+// ───────────────────────────────────────────────────────────────────────────
+grpTL = "── Trendlines with Breaks ──"
+
+showTL       = input.bool(true,  "Activar Trendlines",              group = grpTL)
+tlLength     = input.int(14,    "Swing Detection Lookback",         group = grpTL, minval = 1)
+tlMult       = input.float(1.0, "Slope",                            group = grpTL, minval = 0, step = 0.1)
+tlCalcMethod = input.string("Atr", "Slope Method",
+     options = ["Atr", "Stdev", "Linreg"],                          group = grpTL)
+tlBackpaint  = input.bool(true,  "Backpaint",                       group = grpTL)
+tlShowExt    = input.bool(true,  "Extended Lines",                  group = grpTL)
+upCss        = input.color(color.teal, "Color alcista",             group = grpTL)
+dnCss        = input.color(color.red,  "Color bajista",             group = grpTL)
+
+var float tl_upper    = 0.
+var float tl_lower    = 0.
+var float tl_slope_ph = 0.
+var float tl_slope_pl = 0.
+
+tl_offset = tlBackpaint ? tlLength : 0
+tl_n      = bar_index
+tl_ph     = ta.pivothigh(tlLength, tlLength)
+tl_pl     = ta.pivotlow (tlLength, tlLength)
+
+tl_slope = switch tlCalcMethod
+    "Atr"    => ta.atr(tlLength) / tlLength * tlMult
+    "Stdev"  => ta.stdev(close, tlLength) / tlLength * tlMult
+    "Linreg" =>
+        math.abs(ta.sma(close * tl_n, tlLength) - ta.sma(close, tlLength) * ta.sma(tl_n, tlLength)) /
+        ta.variance(tl_n, tlLength) / 2 * tlMult
+
+tl_slope_ph := tl_ph ? tl_slope : tl_slope_ph
+tl_slope_pl := tl_pl ? tl_slope : tl_slope_pl
+
+tl_upper := tl_ph ? tl_ph : tl_upper - tl_slope_ph
+tl_lower := tl_pl ? tl_pl : tl_lower + tl_slope_pl
+
+var int tl_upos = 0
+var int tl_dnos = 0
+tl_upos := tl_ph ? 0 : close > tl_upper - tl_slope_ph * tlLength ? 1 : tl_upos
+tl_dnos := tl_pl ? 0 : close < tl_lower + tl_slope_pl * tlLength ? 1 : tl_dnos
+
+var line uptl = line.new(na, na, na, na, color = upCss, style = line.style_dashed, extend = extend.right)
+var line dntl = line.new(na, na, na, na, color = dnCss, style = line.style_dashed, extend = extend.right)
+
+if tl_ph and tlShowExt and showTL
+    uptl.set_xy1(tl_n - tl_offset, tlBackpaint ? tl_ph : tl_upper - tl_slope_ph * tlLength)
+    uptl.set_xy2(tl_n - tl_offset + 1, tlBackpaint ? tl_ph - tl_slope : tl_upper - tl_slope_ph * (tlLength + 1))
+
+if tl_pl and tlShowExt and showTL
+    dntl.set_xy1(tl_n - tl_offset, tlBackpaint ? tl_pl : tl_lower + tl_slope_pl * tlLength)
+    dntl.set_xy2(tl_n - tl_offset + 1, tlBackpaint ? tl_pl + tl_slope : tl_lower + tl_slope_pl * (tlLength + 1))
+
+plot(showTL ? (tlBackpaint ? tl_upper : tl_upper - tl_slope_ph * tlLength) : na,
+     "Upper TL", color = tl_ph ? na : upCss, offset = -tl_offset)
+plot(showTL ? (tlBackpaint ? tl_lower : tl_lower + tl_slope_pl * tlLength) : na,
+     "Lower TL", color = tl_pl ? na : dnCss, offset = -tl_offset)
+
+plotshape(showTL and tl_upos > tl_upos[1] ? low  : na,
+     "TL Break ▲", shape.labelup,   location.absolute, upCss,
+     text = "B", textcolor = color.white, size = size.tiny)
+plotshape(showTL and tl_dnos > tl_dnos[1] ? high : na,
+     "TL Break ▼", shape.labeldown, location.absolute, dnCss,
+     text = "B", textcolor = color.white, size = size.tiny)
+
+alertcondition(tl_upos > tl_upos[1], "TL Ruptura Alcista",  "Precio rompió la tendencia bajista hacia arriba")
+alertcondition(tl_dnos > tl_dnos[1], "TL Ruptura Bajista",  "Precio rompió la tendencia alcista hacia abajo")
+
+
+// ───────────────────────────────────────────────────────────────────────────
+// ► SECCIÓN 3 — iFVG / BPR  (© Algoryze — adaptado a v5 sin UDT en security)
+// ───────────────────────────────────────────────────────────────────────────
+grpFVG      = "── iFVG / BPR ──"
+grpFVGStyle = "── iFVG / BPR — Colores ──"
+
+showFVG      = input.bool(true,  "Activar iFVG / BPR",     group = grpFVG)
+fvg_tmf      = input.timeframe("", "Timeframe",            group = grpFVG)
+mitgWick     = input.string("Wick", "Mitigation Type",
+     options = ["Wick", "Close"],                           group = grpFVG) == "Wick"
+mitgPct      = input.int(50, "Mitigation %",
+     minval = 1, maxval = 100, step = 10,                   group = grpFVG)
+fvgLineStyle = input.string(line.style_dotted, "FVG Style",
+     options = [line.style_solid, line.style_dotted, line.style_dashed], group = grpFVG)
+bprLineStyle = input.string(line.style_solid,  "BPR Style",
+     options = [line.style_solid, line.style_dotted, line.style_dashed], group = grpFVG)
+fvgLblSize   = input.string(size.small, "Label Size",
+     options = [size.auto, size.tiny, size.normal, size.small, size.large], group = grpFVG)
+fvgMaxCount  = input.int(2, "FVG máx. visibles", minval = 1, group = grpFVG)
+bprMaxCount  = input.int(2, "BPR máx. visibles", minval = 1, group = grpFVG)
+
+fvgStyleOpt  = input.string("TLAB colors", "Paleta",
+     options = ["TLAB colors", "standart colors", "Monochrome black BG",
+                "Monochrome grey BG", "Custom"],            group = grpFVGStyle)
+fvgCustomClr = input.color(color.rgb(0, 4, 255), "Color personalizado", group = grpFVGStyle)
+
+fvgClrHigh = fvgStyleOpt == "TLAB colors"          ? #9c9c9c   :
+             fvgStyleOpt == "standart colors"       ? color.red :
+             fvgStyleOpt == "Monochrome grey BG"    ? #000000   :
+             fvgStyleOpt == "Monochrome black BG"   ? #9c9c9c   :
+             fvgStyleOpt == "Custom"                ? fvgCustomClr : na
+
+fvgClrLow  = fvgStyleOpt == "TLAB colors"          ? #9c9c9c   :
+             fvgStyleOpt == "standart colors"       ? #00d451   :
+             fvgStyleOpt == "Monochrome grey BG"    ? #000000   :
+             fvgStyleOpt == "Monochrome black BG"   ? #9c9c9c   :
+             fvgStyleOpt == "Custom"                ? fvgCustomClr : na
+
+FVG_GAP_PCT = 0.009  // % mínimo de gap para considerar imbalance
+
+// ── Detección iFVG como primitivos (compatible v5) ──────────────────────
+getFvgData() =>
+    isBull = low > high[2] and close[1] > high[2] and (low - high[2]) / high[2] * 100 > FVG_GAP_PCT
+    isBear = high < low[2] and close[1] < low[2]  and (low[2] - high) / high * 100 > FVG_GAP_PCT
+    fType  = isBull ? 1 : isBear ? -1 : 0
+    fTop   = isBull ? low   : isBear ? low[2] : float(na)
+    fBtm   = isBull ? high[2] : isBear ? high : float(na)
+    fLeft  = isBull ? time   : isBear ? time[2] : int(na)
+    fLeft2 = isBull ? time[2] : isBear ? time   : int(na)
+    // también devolvemos valores OHLC para la mitigación
+    [fType, fTop, fBtm, fLeft, fLeft2,
+     open, close, high, low, high[1], low[1], close[1]]
+
+[fd_type, fd_top, fd_btm, fd_left, fd_left2,
+ fvg_o, fvg_c, fvg_h, fvg_l, fvg_hp, fvg_lp, fvg_cp] =
+     request.security(syminfo.tickerid, fvg_tmf, getFvgData())
+
+// ── Estructuras de datos manuales (arrays de primitivos) ─────────────────
+// FVG activos: tipo, top, btm, left, left2
+var int[]   fvd_type  = array.new_int(0)
+var float[] fvd_top   = array.new_float(0)
+var float[] fvd_btm   = array.new_float(0)
+var int[]   fvd_left  = array.new_int(0)
+var int[]   fvd_left2 = array.new_int(0)
+// FVG mostrados como líneas
+var bool[]  fvd_shown_type = array.new_bool(0)
+var line[]  fvd_line_top   = array.new_line(0)
+var line[]  fvd_line_btm   = array.new_line(0)
+var label[] fvd_lbl        = array.new_label(0)
+// BPR activos
+var int[]   bpr_type  = array.new_int(0)
+var float[] bpr_top   = array.new_float(0)
+var float[] bpr_btm   = array.new_float(0)
+var int[]   bpr_left  = array.new_int(0)
+var box[]   bpr_box   = array.new_box(0)
+
+// Limitar cantidad visible
+if fvd_line_top.size() > fvgMaxCount
+    fvd_line_top.pop().delete()
+    fvd_line_btm.pop().delete()
+    fvd_lbl.pop().delete()
+    fvd_shown_type.pop()
+
+if bpr_box.size() > bprMaxCount
+    bpr_box.pop().delete()
+    bpr_type.pop() ; bpr_top.pop() ; bpr_btm.pop() ; bpr_left.pop()
+
+addtimt = 5 * (time[1] - time[2])
+
+if showFVG and fvg_o != fvg_o[1]
+    isBPR = false
+    fdClr = fd_type == 1 ? fvgClrLow : fvgClrHigh
+
+    // ── Detectar BPR: iFVG nuevo solapa con iFVG opuesto guardado ──
+    if not na(fd_type) and (fd_type == 1 or fd_type == -1) and fvd_top.size() > 0
+        i = 0
+        while i < fvd_top.size()
+            od_top  = fvd_top.get(i)
+            od_btm  = fvd_btm.get(i)
+            od_left = fvd_left.get(i)
+            c1 = fd_top <= od_top and fd_btm >= od_btm
+            c2 = fd_top <= od_top and fd_top > od_btm  and fd_btm < od_btm
+            c3 = fd_top >  od_top and fd_btm >= od_btm and fd_btm < od_top
+            c4 = fd_top >= od_top and fd_btm <= od_btm
+            if c1 or c2 or c3 or c4
+                bpr_t = fd_top
+                bpr_b = fd_btm
+                if c2
+                    bpr_t := fd_top  ; bpr_b := od_btm
+                else if c3
+                    bpr_t := od_top  ; bpr_b := fd_btm
+                else if c4
+                    bpr_t := od_top  ; bpr_b := od_btm
+                isBPR := true
+                bpr_type.unshift(fd_type) ; bpr_top.unshift(bpr_t) ; bpr_btm.unshift(bpr_b) ; bpr_left.unshift(od_left)
+                bpr_box.unshift(box.new(od_left, bpr_t, time, bpr_b,
+                     border_color = fdClr, bgcolor = na, xloc = xloc.bar_time,
+                     border_style = bprLineStyle, text = "BPR",
+                     text_size = fvgLblSize, text_halign = text.align_right, text_color = fdClr))
+            i += 1
+
+    bullMit = mitgWick ? fvg_l  : fvg_c
+    bearMit = mitgWick ? fvg_h  : fvg_c
+
+    // ── Extender y mitigar líneas FVG ──
+    if fvd_shown_type.size() > 0
+        i = 0
+        while i < fvd_shown_type.size()
+            isUp     = fvd_shown_type.get(i)
+            lTop     = fvd_line_top.get(i)
+            lBtm     = fvd_line_btm.get(i)
+            lbl      = fvd_lbl.get(i)
+            lbl.set_x(time + addtimt)
+            lTop.set_x2(time + addtimt)
+            lBtm.set_x2(time + addtimt)
+            mn       = math.min(lBtm.get_y1(), lTop.get_y1())
+            mx       = math.max(lBtm.get_y1(), lTop.get_y1())
+            mid      = (mx - mn) * mitgPct * 0.01
+            mitigated = isUp ? bullMit < (mx - mid) : bearMit > (mn + mid)
+            if mitigated
+                fvd_line_top.remove(i).delete()
+                fvd_line_btm.remove(i).delete()
+                fvd_lbl.remove(i).delete()
+                fvd_shown_type.remove(i)
+                i -= 1
+            i += 1
+
+    // ── Extender y mitigar BPR ──
+    if bpr_box.size() > 0
+        i = 0
+        while i < bpr_box.size()
+            bpr_box.get(i).set_right(time + addtimt)
+            mn       = math.min(bpr_top.get(i), bpr_btm.get(i))
+            mx       = math.max(bpr_top.get(i), bpr_btm.get(i))
+            mid      = (mx - mn) * mitgPct * 0.01
+            isUp     = bpr_type.get(i) == 1
+            mitigated = isUp ? bullMit < (mx - mid) : bearMit > (mn + mid)
+            if mitigated
+                bpr_box.remove(i).delete()
+                bpr_type.remove(i) ; bpr_top.remove(i) ; bpr_btm.remove(i) ; bpr_left.remove(i)
+                i -= 1
+            i += 1
+
+    // ── Mitigar FVDs internos (no dibujados) ──
+    bullMitp = mitgWick ? fvg_lp : fvg_cp
+    bearMitp = mitgWick ? fvg_hp : fvg_cp
+    if fvd_top.size() > 0
+        i = 0
+        while i < fvd_top.size()
+            mn       = math.min(fvd_top.get(i), fvd_btm.get(i))
+            mx       = math.max(fvd_top.get(i), fvd_btm.get(i))
+            mid      = (mx - mn) * mitgPct * 0.01
+            isUp     = fvd_type.get(i) == 1
+            mitigated = isUp ? bullMitp < (mx - mid) : bearMitp > (mn + mid)
+            if mitigated
+                fvd_type.remove(i) ; fvd_top.remove(i) ; fvd_btm.remove(i)
+                fvd_left.remove(i) ; fvd_left2.remove(i)
+                i -= 1
+            i += 1
+
+    // ── Agregar nuevo iFVG ──
+    if not na(fd_type) and (fd_type == 1 or fd_type == -1)
+        fvd_type.unshift(fd_type) ; fvd_top.unshift(fd_top) ; fvd_btm.unshift(fd_btm)
+        fvd_left.unshift(fd_left) ; fvd_left2.unshift(fd_left2)
+        if not isBPR
+            fvd_shown_type.unshift(fd_type == 1)
+            fvd_line_top.unshift(line.new(fd_left,  fd_top, time + addtimt, fd_top,
+                 style = fvgLineStyle, color = fdClr, xloc = xloc.bar_time))
+            fvd_line_btm.unshift(line.new(fd_left2, fd_btm, time + addtimt, fd_btm,
+                 style = fvgLineStyle, color = fdClr, xloc = xloc.bar_time))
+            fvd_lbl.unshift(label.new(time + addtimt, (fd_top + fd_btm) / 2,
+                 color = #ff525200, xloc = xloc.bar_time,
+                 style = label.style_label_right, size = fvgLblSize,
+                 text = "FVG", textcolor = fdClr))

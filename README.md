@@ -41,6 +41,15 @@ Trading/
 | `CM_MacD_Ult_MTF.pine` | MACD multi-timeframe (CM) |
 | `iFVG_BPR.pine` | Fair Value Gaps inversos + Balance Price Range |
 | `Trendlines_with_Breaks_LuxAlgo.pine` | Trendlines con rupturas — LuxAlgo |
+| `AIO_MACD_iFVG_Trendlines.pine` | **All-In-One**: combina los 3 indicadores anteriores |
+
+### AIO — Funcionalidades combinadas
+
+| Componente | Comportamiento en overlay |
+|---|---|
+| **MACD MTF** | Colorea las barras en 4 estados del histograma + flechas ▲▼ en cruce MACD/Señal |
+| **iFVG / BPR** | Dibuja líneas de Fair Value Gaps inversos y cajas de Balance Price Range con mitigación |
+| **Trendlines** | Líneas de tendencia dinámicas con etiquetas "B" al romper | 
 
 ---
 
