@@ -136,10 +136,11 @@ plot(showTL ? (tlBackpaint ? tl_upper : tl_upper - tl_slope_ph * tlLength) : na,
 plot(showTL ? (tlBackpaint ? tl_lower : tl_lower + tl_slope_pl * tlLength) : na,
      "Lower TL", color = not na(tl_pl) ? na : dnCss, offset = -tl_offset)
 
-plotshape(showTL and tl_upos > tl_upos[1] ? low  : na,
+_atr14 = ta.atr(14)
+plotshape(showTL and tl_upos > tl_upos[1] ? low  - _atr14 * 1.5 : na,
      "TL Break ▲", shape.labelup,   location.absolute, upCss,
      text = "B", textcolor = color.white, size = size.tiny)
-plotshape(showTL and tl_dnos > tl_dnos[1] ? high : na,
+plotshape(showTL and tl_dnos > tl_dnos[1] ? high + _atr14 * 1.5 : na,
      "TL Break ▼", shape.labeldown, location.absolute, dnCss,
      text = "B", textcolor = color.white, size = size.tiny)
 
