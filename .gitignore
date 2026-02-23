@@ -1,0 +1,18 @@
+# ── Windows ──────────────────────────────────────────────
+desktop.ini
+Thumbs.db
+ehthumbs.db
+
+# ── MT5 compilados desde código fuente ───────────────────
+# Los .ex5 de Build/ se generan en MetaEditor; no hace falta versionar.
+# Los .ex5 de Indicators/ son de terceros y se incluyen intencionalmente.
+MT5/Build/
+
+# ── Archivos grandes / multimedia del curso ──────────────
+Curso/
+
+# ── VS Code ──────────────────────────────────────────────
+.vscode/
+
+# ── JetBrains / otros IDEs ────────────────────────────────
+.idea/
