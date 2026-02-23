@@ -1,0 +1,256 @@
+// This work is licensed under a Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) https://creativecommons.org/licenses/by-nc-sa/4.0/
+// © Algoryze
+
+//@version=6
+indicator('iFVG (BPR)', overlay = true, max_boxes_count = 500, max_labels_count = 500, max_lines_count = 500, max_bars_back = 500)
+General_settings        = 'General settings'
+tmf               = input.timeframe("","Timeframe", group = General_settings)
+fvg_usewidth      = true
+fvg_gapwidth      = 0.009
+fvg_method        = '%'
+
+mitgationTypeWick = input.string("Wick","Mitigation Type",options = ["Wick","Close"],inline = "mitper", group = General_settings) == "Wick"
+mitgPer           = input.int(50,"Mitigation %",minval = 1,maxval = 100,inline = "mitper",step = 10, group = General_settings)
+
+FVG_settings        = 'FVG settings'
+fvgStyle          = input.string(line.style_dotted,"FVG Style",options = [line.style_solid,line.style_dotted,line.style_dashed], group = FVG_settings)
+fvgLabl           = input.string(size.small,"Lable Size",options = [size.auto,size.tiny,size.normal,size.small,size.large], group = General_settings)
+
+BPR_settings        = 'BPR settings'
+bprStyle          = input.string(line.style_solid,"BPR Style",options = [line.style_solid,line.style_dotted,line.style_dashed], group = BPR_settings)
+showhist          = false
+
+numFVG            = input.int(2,"FVG Count", group = FVG_settings)
+numBRB            = input.int(2,"BRB Count", group = BPR_settings)
+
+Style_settings        = 'Color settings'
+styleOption       = input.string("TLAB colors",  title = "Style:     ",  options = ["TLAB colors", "standart colors", "Monochrome black BG", "Monochrome grey BG", "Custom"], inline = 'h5', group = Style_settings)
+Custom_S          = input.color (color.rgb(0, 4, 255) , 'Custom color ', group = Style_settings)
+
+colorHigh = styleOption == "TLAB colors"           ? #9c9c9c   :
+          styleOption   == "standart colors"       ? color.red :
+          styleOption   == "Monochrome grey BG"    ? #000000   :
+          styleOption   == "Monochrome black BG"   ? #9c9c9c   :
+          styleOption   == "Custom"                ? Custom_S    : na
+
+colorLow = styleOption == "TLAB colors"           ? #9c9c9c :
+          styleOption  == "standart colors"       ? #00d451 :
+          styleOption  == "Monochrome grey BG"    ? #000000 :
+          styleOption  == "Monochrome black BG"   ? #9c9c9c :
+          styleOption  == "Custom"                ? Custom_S  :na
+
+imbalance_detection(top, btm, condition,atr) =>
+    var is_width = true
+
+    if fvg_usewidth
+        dist = top - btm
+
+        is_width := switch fvg_method
+            'Points' => dist > fvg_gapwidth
+            '%' => dist / btm * 100 > fvg_gapwidth
+        is_width
+
+    is_true = condition and is_width
+    is_true
+
+type fvgDetails
+	int   Type = 0
+	float Top = na
+	float Btm = na
+	int   left = na
+    int   left2 = na
+	int   right = na
+    int   cnt = 0
+    color   fvgClr=na
+
+getFVG() =>
+    atr = ta.atr(200)
+    fvgDetails fd = fvgDetails.new()
+
+    isFvgBull = imbalance_detection(low, high[2], low  > high[2] and close[1] > high[2],atr)
+    isFvgBear = imbalance_detection(low[2], high, high < low[2]  and close[1] < low[2] ,atr)
+
+    if  isFvgBull
+        fd.Type     := 1
+        fd.Top      := low
+        fd.Btm      := high[2]
+        fd.left     := time
+        fd.left2    := time[2]
+        fd.right    := time
+        fd.fvgClr   := colorLow
+
+    if  isFvgBear
+        fd.Type  := -1
+        fd.Top   := low[2]
+        fd.Btm   := high
+        fd.left  := time[2]
+        fd.left2 := time
+        fd.right := time 
+        fd.fvgClr   := colorHigh
+
+    [fd,open, close,high,low,high[1],low[1],close[1]]
+
+[fd,open_, close_,high_,low_,high_p,low_p,close_p] = request.security(syminfo.tickerid,tmf, getFVG())
+
+var arrFVDD = array.new<fvgDetails>(0)
+var arrFVDDType = array.new_bool(0)
+
+var arrFVDLineTop = array.new_line(0)
+var arrFVDLineBtm = array.new_line(0)
+
+var arrFVDLblTop = array.new_label(0)
+
+if  arrFVDLineTop.size() > numFVG
+    arrFVDLineTop.pop().delete()
+    arrFVDLineBtm.pop().delete()
+    arrFVDLblTop.pop().delete()
+    arrFVDDType.pop()
+
+var arrFVD_BPR = array.new<fvgDetails>(0)
+var arrFVD_BPRBox = array.new_box(0)
+
+if arrFVD_BPRBox.size() > numBRB
+    arrFVD_BPRBox.pop().delete()
+    arrFVD_BPR.pop() 
+
+addtimt = 5*(time[1] - time[2]) 
+if open_ != open_[1]
+    isBPR = false
+    if not na(fd) and not na(fd[1])
+        if arrFVDD.size() > 0  and (fd.Type == 1 or fd.Type == -1)
+            i = 0
+            while i < arrFVDD.size() 
+                odlfd = arrFVDD.get(i)
+                c1 =  fd.Top <= odlfd.Top and fd.Btm >= odlfd.Btm
+                c2 = fd.Top <= odlfd.Top and fd.Top > odlfd.Btm  and fd.Btm < odlfd.Btm 
+                c3 = fd.Top > odlfd.Top and fd.Btm >= odlfd.Btm and fd.Btm < odlfd.Top
+                c4 = fd.Top >= odlfd.Top and fd.Btm <= odlfd.Btm
+
+                if c1 or c2 or c3 or c4
+                    top_ = fd.Top 
+                    btm_ = fd.Btm
+                    bleft_ = odlfd.left
+                    if c2
+                        top_ := fd.Top 
+                        btm_ := odlfd.Btm
+                    else if c3
+                        top_ := odlfd.Top 
+                        btm_ := fd.Btm
+                    else if c4
+                        top_ := odlfd.Top 
+                        btm_ := odlfd.Btm
+    
+                    isBPR := true
+                    arrFVD_BPR.unshift(fvgDetails.new(fd.Type,top_,btm_,bleft_,time,0))
+                    arrFVD_BPRBox.unshift(box.new(bleft_, top_, time, btm_, border_color = fd.fvgClr, bgcolor = na, xloc = xloc.bar_time,border_style = bprStyle,text = "BPR",text_size = fvgLabl,text_halign = text.align_right,text_color = fd.fvgClr))
+    
+                i += 1
+
+    bullMit = mitgationTypeWick ? low_ : close_
+    bearMit = mitgationTypeWick ? high_ : close_
+
+    //fvg testing
+    if arrFVDDType.size() > 0
+        i = 0
+        while i < arrFVDDType.size()
+            fdnTpe = arrFVDDType.get(i)
+            //fdn = arrFVDDBox.get(i)
+            fdnLblTop = arrFVDLblTop.get(i)
+            //fdnLblBtm = arrFVDLblBtm.get(i)
+
+            fdnLinTop = arrFVDLineTop.get(i)
+            fdnLinBtm = arrFVDLineBtm.get(i)
+
+            fdnLblTop.set_x(time+addtimt)
+            //fdnLblBtm.set_x(time)
+
+            fdnLinTop.set_x2(time+addtimt)
+            fdnLinBtm.set_x2(time+addtimt)
+
+            minval = math.min(fdnLinBtm.get_y1(),fdnLinTop.get_y1())
+            maxvla = math.max(fdnLinBtm.get_y1(),fdnLinTop.get_y1())
+            midPnt = (maxvla - minval)*mitgPer*0.01
+            if fdnTpe 
+                if bullMit < (maxvla - midPnt)//fdn.get_bottom()
+                    arrFVDLblTop.remove(i).delete()
+                    arrFVDLineTop.remove(i).delete()
+                    arrFVDLineBtm.remove(i).delete()
+                    arrFVDDType.remove(i)
+                    i -= 1
+            else
+                if bearMit > (minval + midPnt)//fdn.get_top()
+                    arrFVDLblTop.remove(i).delete()
+                    arrFVDLineTop.remove(i).delete()
+                    arrFVDLineBtm.remove(i).delete()
+                    arrFVDDType.remove(i)
+                    i -= 1
+
+            i += 1
+
+
+    //bpr testing
+    if arrFVD_BPR.size() > 0  
+        i = 0
+        while i < arrFVD_BPR.size()
+            fdn = arrFVD_BPR.get(i)
+
+            arrFVD_BPRBox.get(i).set_right(time+addtimt)
+
+            minval = math.min(fdn.Top,fdn.Btm)
+            maxvla = math.max(fdn.Top,fdn.Btm)
+            midPnt = (maxvla - minval)*mitgPer*0.01
+
+            if fdn.Type == 1
+                if bullMit < (maxvla - midPnt)
+                    bx = arrFVD_BPRBox.remove(i)
+                    if showhist
+                        bx.set_right(time+addtimt)
+                    else
+                        bx.delete()
+                    arrFVD_BPR.remove(i)
+                    i -= 1
+            else
+                if bearMit > (minval + midPnt)
+                    bx = arrFVD_BPRBox.remove(i)
+                    if showhist
+                        bx.set_right(time+addtimt)
+                    else
+                        bx.delete()
+                    arrFVD_BPR.remove(i)
+                    i -= 1
+
+            i += 1
+
+    bullMitp = mitgationTypeWick ? low_p : close_p
+    bearMitp = mitgationTypeWick ? high_p : close_p
+
+    if arrFVDD.size() > 0
+        i = 0
+        while i < arrFVDD.size()
+            fdn = arrFVDD.get(i)
+            
+            minval = math.min(fdn.Top,fdn.Btm)
+            maxvla = math.max(fdn.Top,fdn.Btm)
+            midPnt = (maxvla - minval)*mitgPer*0.01
+
+            if fdn.Type == 1 
+                if  bullMitp < (maxvla - midPnt)
+                    arrFVDD.remove(i)
+                    i -= 1
+            else
+                if  bearMitp > (minval + midPnt)
+                    arrFVDD.remove(i)
+                    i -= 1
+            i += 1
+
+   
+    if not na(fd) and not na(fd[1])
+        if fd.Type == 1 or fd.Type == -1 //(fd[1]).left != fd.left   
+            arrFVDD.unshift(fd)
+            if not isBPR
+                arrFVDDType.unshift(fd.Type == 1)
+                arrFVDLineTop.unshift(line.new(fd.left, fd.Top,time+addtimt, fd.Top,style = fvgStyle,color = fd.fvgClr,xloc = xloc.bar_time))
+                arrFVDLineBtm.unshift(line.new(fd.left2, fd.Btm,time+addtimt, fd.Btm,style = fvgStyle,color = fd.fvgClr,xloc = xloc.bar_time))
+                arrFVDLblTop.unshift(label.new(time+addtimt,  (fd.Top+fd.Btm)/2,color = #ff525200,xloc = xloc.bar_time,style = label.style_label_right,size = fvgLabl,text = "FVG",textcolor = fd.fvgClr))
+               
+
