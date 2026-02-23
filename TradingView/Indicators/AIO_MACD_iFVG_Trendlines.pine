@@ -101,12 +101,13 @@ tl_n      = bar_index
 tl_ph     = ta.pivothigh(tlLength, tlLength)
 tl_pl     = ta.pivotlow (tlLength, tlLength)
 
+_linreg_num = math.abs(ta.sma(close * tl_n, tlLength) - ta.sma(close, tlLength) * ta.sma(tl_n, tlLength))
+_linreg_slope = _linreg_num / ta.variance(tl_n, tlLength) / 2 * tlMult
+
 tl_slope = switch tlCalcMethod
     "Atr"    => ta.atr(tlLength) / tlLength * tlMult
     "Stdev"  => ta.stdev(close, tlLength) / tlLength * tlMult
-    "Linreg" =>
-        math.abs(ta.sma(close * tl_n, tlLength) - ta.sma(close, tlLength) * ta.sma(tl_n, tlLength))
-        / ta.variance(tl_n, tlLength) / 2 * tlMult
+    "Linreg" => _linreg_slope
 
 tl_slope_ph := tl_ph ? tl_slope : tl_slope_ph
 tl_slope_pl := tl_pl ? tl_slope : tl_slope_pl
