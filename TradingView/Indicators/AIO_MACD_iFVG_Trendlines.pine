@@ -105,8 +105,8 @@ tl_slope = switch tlCalcMethod
     "Atr"    => ta.atr(tlLength) / tlLength * tlMult
     "Stdev"  => ta.stdev(close, tlLength) / tlLength * tlMult
     "Linreg" =>
-        math.abs(ta.sma(close * tl_n, tlLength) - ta.sma(close, tlLength) * ta.sma(tl_n, tlLength)) /
-        ta.variance(tl_n, tlLength) / 2 * tlMult
+        math.abs(ta.sma(close * tl_n, tlLength) - ta.sma(close, tlLength) * ta.sma(tl_n, tlLength))
+        / ta.variance(tl_n, tlLength) / 2 * tlMult
 
 tl_slope_ph := tl_ph ? tl_slope : tl_slope_ph
 tl_slope_pl := tl_pl ? tl_slope : tl_slope_pl
