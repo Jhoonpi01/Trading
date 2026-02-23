@@ -6,9 +6,9 @@
 //   · iFVG (BPR)             — © Algoryze  (adaptado a v5)
 //   · Trendlines with Breaks — © LuxAlgo   (v5 sin cambios)
 // ═══════════════════════════════════════════════════════════════════════════
-//@version=5
+//@version=6
 indicator("AIO: MACD + iFVG/BPR + Trendlines",
-     shorttitle        = "AIO Trading",
+     shorttitle        = "AIO Trade",
      overlay           = true,
      max_boxes_count   = 500,
      max_labels_count  = 500,
@@ -109,32 +109,32 @@ tl_slope = switch tlCalcMethod
     "Stdev"  => ta.stdev(close, tlLength) / tlLength * tlMult
     "Linreg" => _linreg_slope
 
-tl_slope_ph := tl_ph ? tl_slope : tl_slope_ph
-tl_slope_pl := tl_pl ? tl_slope : tl_slope_pl
+tl_slope_ph := not na(tl_ph) ? tl_slope : tl_slope_ph
+tl_slope_pl := not na(tl_pl) ? tl_slope : tl_slope_pl
 
-tl_upper := tl_ph ? tl_ph : tl_upper - tl_slope_ph
-tl_lower := tl_pl ? tl_pl : tl_lower + tl_slope_pl
+tl_upper := not na(tl_ph) ? tl_ph : tl_upper - tl_slope_ph
+tl_lower := not na(tl_pl) ? tl_pl : tl_lower + tl_slope_pl
 
 var int tl_upos = 0
 var int tl_dnos = 0
-tl_upos := tl_ph ? 0 : close > tl_upper - tl_slope_ph * tlLength ? 1 : tl_upos
-tl_dnos := tl_pl ? 0 : close < tl_lower + tl_slope_pl * tlLength ? 1 : tl_dnos
+tl_upos := not na(tl_ph) ? 0 : close > tl_upper - tl_slope_ph * tlLength ? 1 : tl_upos
+tl_dnos := not na(tl_pl) ? 0 : close < tl_lower + tl_slope_pl * tlLength ? 1 : tl_dnos
 
 var line uptl = line.new(na, na, na, na, color = upCss, style = line.style_dashed, extend = extend.right)
 var line dntl = line.new(na, na, na, na, color = dnCss, style = line.style_dashed, extend = extend.right)
 
-if tl_ph and tlShowExt and showTL
+if not na(tl_ph) and tlShowExt and showTL
     uptl.set_xy1(tl_n - tl_offset, tlBackpaint ? tl_ph : tl_upper - tl_slope_ph * tlLength)
     uptl.set_xy2(tl_n - tl_offset + 1, tlBackpaint ? tl_ph - tl_slope : tl_upper - tl_slope_ph * (tlLength + 1))
 
-if tl_pl and tlShowExt and showTL
+if not na(tl_pl) and tlShowExt and showTL
     dntl.set_xy1(tl_n - tl_offset, tlBackpaint ? tl_pl : tl_lower + tl_slope_pl * tlLength)
     dntl.set_xy2(tl_n - tl_offset + 1, tlBackpaint ? tl_pl + tl_slope : tl_lower + tl_slope_pl * (tlLength + 1))
 
 plot(showTL ? (tlBackpaint ? tl_upper : tl_upper - tl_slope_ph * tlLength) : na,
-     "Upper TL", color = tl_ph ? na : upCss, offset = -tl_offset)
+     "Upper TL", color = not na(tl_ph) ? na : upCss, offset = -tl_offset)
 plot(showTL ? (tlBackpaint ? tl_lower : tl_lower + tl_slope_pl * tlLength) : na,
-     "Lower TL", color = tl_pl ? na : dnCss, offset = -tl_offset)
+     "Lower TL", color = not na(tl_pl) ? na : dnCss, offset = -tl_offset)
 
 plotshape(showTL and tl_upos > tl_upos[1] ? low  : na,
      "TL Break ▲", shape.labelup,   location.absolute, upCss,
@@ -168,9 +168,7 @@ fvgLblSize   = input.string(size.small, "Label Size",
 fvgMaxCount  = input.int(2, "FVG máx. visibles", minval = 1, group = grpFVG)
 bprMaxCount  = input.int(2, "BPR máx. visibles", minval = 1, group = grpFVG)
 
-fvgStyleOpt  = input.string("TLAB colors", "Paleta",
-     options = ["TLAB colors", "standart colors", "Monochrome black BG",
-                "Monochrome grey BG", "Custom"],            group = grpFVGStyle)
+fvgStyleOpt  = input.string("TLAB colors", "Paleta", options = ["TLAB colors", "standart colors", "Monochrome black BG", "Monochrome grey BG", "Custom"], group = grpFVGStyle)
 fvgCustomClr = input.color(color.rgb(0, 4, 255), "Color personalizado", group = grpFVGStyle)
 
 fvgClrHigh = fvgStyleOpt == "TLAB colors"          ? #9c9c9c   :
