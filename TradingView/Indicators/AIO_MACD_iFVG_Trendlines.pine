@@ -231,7 +231,10 @@ if fvd_line_top.size() > fvgMaxCount
 
 if bpr_box.size() > bprMaxCount
     bpr_box.pop().delete()
-    bpr_type.pop() ; bpr_top.pop() ; bpr_btm.pop() ; bpr_left.pop()
+    bpr_type.pop()
+    bpr_top.pop()
+    bpr_btm.pop()
+    bpr_left.pop()
 
 addtimt = 5 * (time[1] - time[2])
 
@@ -254,13 +257,19 @@ if showFVG and fvg_o != fvg_o[1]
                 bpr_t = fd_top
                 bpr_b = fd_btm
                 if c2
-                    bpr_t := fd_top  ; bpr_b := od_btm
+                    bpr_t := fd_top
+                    bpr_b := od_btm
                 else if c3
-                    bpr_t := od_top  ; bpr_b := fd_btm
+                    bpr_t := od_top
+                    bpr_b := fd_btm
                 else if c4
-                    bpr_t := od_top  ; bpr_b := od_btm
+                    bpr_t := od_top
+                    bpr_b := od_btm
                 isBPR := true
-                bpr_type.unshift(fd_type) ; bpr_top.unshift(bpr_t) ; bpr_btm.unshift(bpr_b) ; bpr_left.unshift(od_left)
+                bpr_type.unshift(fd_type)
+                bpr_top.unshift(bpr_t)
+                bpr_btm.unshift(bpr_b)
+                bpr_left.unshift(od_left)
                 bpr_box.unshift(box.new(od_left, bpr_t, time, bpr_b,
                      border_color = fdClr, bgcolor = na, xloc = xloc.bar_time,
                      border_style = bprLineStyle, text = "BPR",
@@ -305,7 +314,10 @@ if showFVG and fvg_o != fvg_o[1]
             mitigated = isUp ? bullMit < (mx - mid) : bearMit > (mn + mid)
             if mitigated
                 bpr_box.remove(i).delete()
-                bpr_type.remove(i) ; bpr_top.remove(i) ; bpr_btm.remove(i) ; bpr_left.remove(i)
+                bpr_type.remove(i)
+                bpr_top.remove(i)
+                bpr_btm.remove(i)
+                bpr_left.remove(i)
                 i -= 1
             i += 1
 
@@ -321,15 +333,21 @@ if showFVG and fvg_o != fvg_o[1]
             isUp     = fvd_type.get(i) == 1
             mitigated = isUp ? bullMitp < (mx - mid) : bearMitp > (mn + mid)
             if mitigated
-                fvd_type.remove(i) ; fvd_top.remove(i) ; fvd_btm.remove(i)
-                fvd_left.remove(i) ; fvd_left2.remove(i)
+                fvd_type.remove(i)
+                fvd_top.remove(i)
+                fvd_btm.remove(i)
+                fvd_left.remove(i)
+                fvd_left2.remove(i)
                 i -= 1
             i += 1
 
     // ── Agregar nuevo iFVG ──
     if not na(fd_type) and (fd_type == 1 or fd_type == -1)
-        fvd_type.unshift(fd_type) ; fvd_top.unshift(fd_top) ; fvd_btm.unshift(fd_btm)
-        fvd_left.unshift(fd_left) ; fvd_left2.unshift(fd_left2)
+        fvd_type.unshift(fd_type)
+        fvd_top.unshift(fd_top)
+        fvd_btm.unshift(fd_btm)
+        fvd_left.unshift(fd_left)
+        fvd_left2.unshift(fd_left2)
         if not isBPR
             fvd_shown_type.unshift(fd_type == 1)
             fvd_line_top.unshift(line.new(fd_left,  fd_top, time + addtimt, fd_top,
