@@ -1,0 +1,639 @@
+100%|█████████████████████████████████████| 1.42G/1.42G [01:16<00:00, 20.0MiB/s]
+[00:00.000 --> 00:03.000]  se ejecuta la venta, venta, te da la venta
+[00:03.000 --> 00:05.280]  lo que pasa acá
+[00:05.280 --> 00:08.600]  cuando va la doble señal
+[00:08.600 --> 00:10.680]  claro cuando va la doble señal
+[00:10.680 --> 00:11.920]  eh
+[00:11.920 --> 00:14.760]  porque que pasa yo estoy tratando de esto
+[00:14.760 --> 00:17.120]  llevarla a un bot viste
+[00:17.120 --> 00:22.120]  en el bot me parece que se le podría resolver con que el bot tome la decisión
+[00:22.120 --> 00:23.040]  de entrar
+[00:23.040 --> 00:26.120]  y se da una doble señal de que invalida la otra y
+[00:26.120 --> 00:28.320]  o decida por una de las dos
+[00:28.360 --> 00:30.000]  el tema de no se como hacerlo
+[00:30.000 --> 00:33.120]  yo cuando como opero manual osea lo unico que hago
+[00:33.120 --> 00:36.360]  hoy en día por lo que estoy tratando de sumar
+[00:36.360 --> 00:38.600]  de ir a esta logica ves compra acá
+[00:38.600 --> 00:42.200]  acá era stoplo, acá era tp, acá era stoplo, acá era tp
+[00:42.200 --> 00:43.520]  eh
+[00:43.520 --> 00:45.840]  pero lo que hago cuando me sucede esto
+[00:45.840 --> 00:47.960]  es sumarme en el
+[00:47.960 --> 00:50.800]  en el orden flow que ya viene teniendo
+[00:50.800 --> 00:52.440]  entiendes
+[00:52.440 --> 00:54.240]  entonces
+[00:54.240 --> 00:56.880]  la logica de
+[00:56.920 --> 00:59.680]  de este indicador básicamente es
+[00:59.680 --> 01:03.000]  en velas de h2
+[01:03.000 --> 01:04.720]  manipular
+[01:04.720 --> 01:07.240]  el power of tree de
+[01:07.240 --> 01:08.840]  21
+[01:08.840 --> 01:10.600]  a 1 inclusive
+[01:10.600 --> 01:13.600]  no vendría a ser el power of tree de
+[01:13.600 --> 01:15.840]  de asia sino que vendría a ser
+[01:15.840 --> 01:17.480]  el power of tree de asia
+[01:17.480 --> 01:21.040]  si no se asia ponerle que es así
+[01:21.040 --> 01:23.120]  y la vela de la una también
+[01:23.120 --> 01:25.680]  ponerle la vela de asia termina acá
+[01:25.680 --> 01:27.520]  y la vela de la una termina ahí
+[01:27.520 --> 01:30.320]  entonces toma esas dos velas
+[01:30.320 --> 01:33.800]  que me marca el indicador la manipulación de la vela
+[01:33.800 --> 01:36.400]  de las tres y la de las cuatro
+[01:36.400 --> 01:37.200]  vean siguiendo
+[01:37.200 --> 01:39.480]  ok osea sin rompe
+[01:39.480 --> 01:40.400]  claro acá
+[01:40.400 --> 01:43.200]  osea acá va a tener la vela de las
+[01:43.200 --> 01:45.080]  de las tres
+[01:45.080 --> 01:46.800]  la vela de las cuatro
+[01:46.800 --> 01:48.440]  y la vela de las cinco
+[01:48.440 --> 01:52.360]  entonces capaz que la vela de las tres me hace esto
+[01:52.360 --> 01:53.560]  y la vela de
+[01:53.600 --> 01:56.480]  las cuatro hace esto y cierra por arriba
+[01:56.480 --> 01:58.280]  el indicador ya me marca
+[01:58.280 --> 02:01.920]  que hay una toma de liquidez
+[02:01.920 --> 02:02.800]  entonces
+[02:02.800 --> 02:05.360]  yo que lógica aplico acá power of tree
+[02:05.360 --> 02:07.160]  en la vela de las cinco
+[02:07.160 --> 02:08.680]  acá ya me da la señal
+[02:08.680 --> 02:10.960]  entonces en la vela de las cinco yo trato de
+[02:10.960 --> 02:12.440]  esperar la apertura
+[02:12.440 --> 02:16.320]  si está muy caro ya compro desde ahí con el tablo acá abajo
+[02:16.320 --> 02:18.520]  o un descuento a un punto de interés
+[02:18.520 --> 02:20.640]  m15
+[02:20.640 --> 02:22.840]  y tp al menos
+[02:22.880 --> 02:24.840]  el alto de las 21 horas
+[02:24.840 --> 02:27.880]  ok o el o el bajo de las 21 horas
+[02:27.880 --> 02:29.960]  esta es la lógica que aplica
+[02:29.960 --> 02:32.160]  el indicador
+[02:32.160 --> 02:34.400]  para
+[02:34.400 --> 02:38.480]  para que te marque básicamente la toma de liquidez
+[02:38.480 --> 02:40.800]  la vela de 21
+[02:40.800 --> 02:41.600]  22
+[02:41.600 --> 02:42.480]  23
+[02:42.480 --> 02:43.840]  la de la una
+[02:43.840 --> 02:45.400]  son dos horas
+[02:45.400 --> 02:46.400]  21
+[02:46.400 --> 02:47.520]  23
+[02:47.520 --> 02:48.680]  y la de la una
+[02:48.680 --> 02:49.640]  cierra
+[02:49.640 --> 02:51.520]  te arma lo que tendría que ser
+[02:51.600 --> 02:52.920]  un rango
+[02:52.920 --> 02:55.640]  el rango se manipula por arriba
+[02:55.640 --> 02:57.400]  y el próximo power of tree cual sería
+[02:57.400 --> 02:58.880]  la vela de las cinco
+[02:58.880 --> 03:00.400]  esta vela que está acá
+[03:00.400 --> 03:04.640]  entonces ahí yo busco un punto de interés
+[03:04.640 --> 03:06.160]  para venderlo
+[03:06.160 --> 03:07.240]  se entiende
+[03:07.240 --> 03:08.600]  en este caso
+[03:08.600 --> 03:10.520]  como lo estoy haciendo un manual
+[03:10.520 --> 03:14.560]  estoy ejecutando en el punto más óptimo que yo consiguiera o no del descuento
+[03:14.560 --> 03:17.560]  entonces
+[03:17.560 --> 03:18.280]  que
+[03:18.280 --> 03:20.640]  que haría yo para
+[03:20.920 --> 03:22.960]  para que sea automático
+[03:22.960 --> 03:24.960]  claro para automatizarlo
+[03:24.960 --> 03:26.920]  sería básicamente que
+[03:26.920 --> 03:28.640]  espere el power of tree
+[03:28.640 --> 03:30.640]  acá por ejemplo
+[03:30.640 --> 03:33.840]  voy a activar este indicador que está acá arriba
+[03:33.840 --> 03:35.840]  que lo uso sólo para que me marque
+[03:35.840 --> 03:38.320]  el power of tree de 5 a 9 de la mañana
+[03:38.320 --> 03:42.440]  y el siguiente de 9 a 13
+[03:42.440 --> 03:44.360]  entonces todos los trays fíjate
+[03:44.360 --> 03:48.320]  todos los trays se ejecutó después de la apertura
+[03:48.320 --> 03:49.240]  de 5 a 9
+[03:49.240 --> 03:53.680]  zona azul
+[03:53.680 --> 03:56.480]  el rango azul
+[03:56.480 --> 03:58.880]  acá por ejemplo
+[03:58.880 --> 04:03.440]  casi todos van de un punto de interés
+[04:03.440 --> 04:04.920]  apertura
+[04:04.920 --> 04:07.120]  manipula y ya distribuye
+[04:07.120 --> 04:08.200]  y acá
+[04:08.200 --> 04:09.840]  el indicador en dos horas
+[04:09.840 --> 04:12.600]  fíjate como se veía
+[04:12.600 --> 04:18.520]  el cierre básicamente es la vela de tres y cuatro que te agrupa
+[04:18.600 --> 04:19.480]  acá también
+[04:19.480 --> 04:20.280]  y acá la misma
+[04:20.280 --> 04:23.880]  fíjate lo mismo que sucedió acá lo que sucedió acá y lo que sucedió acá es lo mismo que sucedió
+[04:23.880 --> 04:25.800]  estos tres días
+[04:25.800 --> 04:29.160]  acá no lo marcó pero acá lo marcó y acá lo marcó
+[04:29.160 --> 04:30.800]  entonces
+[04:30.800 --> 04:32.960]  eee
+[04:32.960 --> 04:37.160]  el problema que estoy teniendo como yo no entiendo realmente
+[04:37.160 --> 04:39.840]  programación porque no es lo mío
+[04:39.840 --> 04:41.560]  y me estoy volviendo loco
+[04:41.560 --> 04:43.680]  hoy por ejemplo mira
+[04:43.680 --> 04:45.080]  dio la venta
+[04:45.080 --> 04:47.960]  y recién la dio a las 9 de la mañana
+[04:48.040 --> 04:50.160]  eee es
+[04:50.160 --> 04:53.880]  de esta lógica no sé cómo llevar la metatrader
+[04:53.880 --> 04:55.000]  ¿entendés?
+[04:55.000 --> 04:59.960]  traté de llevarla, traté de copiarla, traté con chat gpt
+[04:59.960 --> 05:01.120]  buscarle la vuelta
+[05:01.120 --> 05:03.400]  pero realmente no
+[05:03.400 --> 05:05.320]  nada estoy trabado ahí
+[05:05.320 --> 05:07.400]  estoy muy trabado ahí
+[05:07.400 --> 05:09.800]  y la verdad que funciona
+[05:09.800 --> 05:11.760]  fíjate en el gráfico
+[05:11.760 --> 05:13.400]  son muchos establos también
+[05:13.400 --> 05:16.440]  pero yo considero que están en un 50%
+[05:16.480 --> 05:20.080]  solo con el indicador, o sea sin tener en cuenta nada más que
+[05:20.080 --> 05:24.920]  que el indicador hay pares donde por ejemplo
+[05:24.920 --> 05:28.800]  eee por ejemplo euro franco suizo
+[05:28.800 --> 05:30.800]  me da la orden
+[05:30.800 --> 05:32.960]  bastante limpia
+[05:32.960 --> 05:34.360]  eee
+[05:34.360 --> 05:37.480]  y por ejemplo euro jpi
+[05:37.480 --> 05:41.320]  que era la compra que estaba tirando hoy
+[05:41.320 --> 05:44.240]  fíjate como es tan limpia que la entrega
+[05:44.240 --> 05:46.160]  manipula el rango
+[05:46.320 --> 05:49.680]  y bueno acá porque ya sabemos que está pasando justo cuando impacta acá
+[05:49.680 --> 05:54.520]  bajas a 15 y ya sabes bueno impacto en un bloque de 15 minutos así
+[05:54.520 --> 05:58.520]  giro, acumulo nuevamente, líquido, inducción y ahí sí
+[05:58.520 --> 06:00.840]  pero yo quiero
+[06:00.840 --> 06:04.120]  de alguna forma sistematizarlo de esta manera
+[06:04.120 --> 06:05.240]  eee
+[06:05.240 --> 06:06.680]  y no solo
+[06:06.680 --> 06:10.400]  lo quiero llevar a metatrader para que
+[06:10.400 --> 06:12.200]  para que ejecute solo no, sino que es
+[06:12.200 --> 06:15.440]  por lo que vi metatrader te da una opción
+[06:15.440 --> 06:16.960]  de histórico
+[06:16.960 --> 06:19.680]  que es correr el bot en el pasado
+[06:19.680 --> 06:21.560]  si, correcto
+[06:21.560 --> 06:23.080]  yo quiero
+[06:23.080 --> 06:26.840]  al menos no sé si ese mismo código no sé cómo
+[06:26.840 --> 06:28.200]  cómo se aplica eso
+[06:28.200 --> 06:33.080]  eee si, lo que mencionas tú puedes hacer el
+[06:33.080 --> 06:38.640]  validar que la estrategia es correcta, le pones el tiempo que quiera que corra la estrategia
+[06:38.640 --> 06:40.600]  y él saca todas las estadísticas
+[06:40.600 --> 06:43.920]  y uno puede empezar a jugar con los parámetros
+[06:43.920 --> 06:44.640]  bien
+[06:44.680 --> 06:47.280]  pues digamos yo tengo
+[06:47.280 --> 06:49.480]  yo hice la de
+[06:49.480 --> 06:50.920]  te acuerdas de Mike
+[06:50.920 --> 06:54.600]  que eran los fractales y
+[06:54.600 --> 06:57.160]  ¿cuál era? y la EMA
+[06:57.160 --> 06:59.040]  yo hice esa
+[06:59.040 --> 07:02.320]  sino que el tema es que
+[07:02.320 --> 07:06.800]  da la señal del fractal y el robot le mete
+[07:06.800 --> 07:08.320]  mete la operación
+[07:08.320 --> 07:11.320]  pero después se borra la señal del fractal
+[07:11.320 --> 07:13.080]  ¿si me vas a entender?
+[07:13.240 --> 07:15.440]  o sea, él como que la repinta
+[07:15.440 --> 07:20.520]  entonces yo me puse a mirar ley para que la señal la tomara cuando
+[07:20.520 --> 07:22.240]  ya cerrara la vela pero
+[07:22.240 --> 07:24.400]  ya está muy abajo y entonces no
+[07:24.400 --> 07:26.000]  no da bien la
+[07:26.000 --> 07:29.160]  si por lo que el fractal lo va dando en vivo
+[07:29.160 --> 07:31.120]  es como muy scalper y no
+[07:31.120 --> 07:34.960]  no me rentaba mucho
+[07:34.960 --> 07:38.960]  si, a ver yo la backtesté y todo pero
+[07:38.960 --> 07:41.360]  es como que una vez que se invalida
+[07:41.640 --> 07:44.640]  te desaparecía y era como che pero recién lo vi
+[07:44.640 --> 07:48.080]  recién tenía la señal de entrada y ahora
+[07:48.080 --> 07:49.200]  no estoy loco
+[07:49.200 --> 07:51.240]  me pasó un par de veces y
+[07:51.240 --> 07:55.600]  se lo dije cuando me pidió que la backtesté
+[07:55.600 --> 07:58.800]  y como que no le dio mucha bola
+[07:58.800 --> 08:01.920]  y ahora vi que la sigue vendiendo así como
+[08:01.920 --> 08:03.960]  con los mismos pasos todo
+[08:03.960 --> 08:05.000]  pero
+[08:05.000 --> 08:06.880]  la verdad que para mí
+[08:06.880 --> 08:09.520]  es nada más que un indicador que repinta
+[08:09.520 --> 08:11.920]  exacto, que repinta
+[08:11.920 --> 08:14.520]  la lógica que uso acá es
+[08:14.520 --> 08:16.520]  lo que aplico todos los días, o sea mira esto
+[08:16.520 --> 08:18.680]  no y sabes que me gusta? o sea es
+[08:18.680 --> 08:21.840]  da como el indicio, como el gatillo
+[08:21.840 --> 08:27.120]  o sea lo da antes y tiene que uno ir a buscarlo es cuando ya se está
+[08:27.120 --> 08:30.920]  haciéndolo azul, el power of three
+[08:30.920 --> 08:32.440]  acá por ejemplo
+[08:32.440 --> 08:34.880]  esto hubiese sido
+[08:34.880 --> 08:36.280]  o un break in
+[08:36.280 --> 08:37.320]  porque
+[08:37.360 --> 08:42.960]  ya los gestión así, tomo la decisión de entrar en el power of three de la 5 por ejemplo
+[08:42.960 --> 08:44.600]  hubiese entrado acá
+[08:44.600 --> 08:47.000]  acá ya tenés que asegurar si o si
+[08:47.000 --> 08:49.880]  o era un break in o un parcial
+[08:49.880 --> 08:51.920]  acá, establo seguro
+[08:51.920 --> 08:56.360]  acá establo seguro pero al otro día te da un tp
+[08:56.360 --> 08:59.720]  y al otro día te da la entrada por oro del flow
+[08:59.720 --> 09:01.600]  bueno hoy no va a restar
+[09:01.600 --> 09:05.640]  y si lo redefinícen 15 minutos seguramente este bloque de 2 horas
+[09:05.680 --> 09:07.520]  va a terminar siendo la mecha
+[09:07.520 --> 09:09.200]  correcto
+[09:09.200 --> 09:11.240]  pero
+[09:11.240 --> 09:14.400]  la señal te la da al cierre de la vela de
+[09:14.400 --> 09:15.880]  de 2 horas
+[09:15.880 --> 09:17.120]  de 3 a 4
+[09:17.120 --> 09:19.000]  lo que
+[09:19.000 --> 09:22.120]  yo hice con el indicador este
+[09:22.120 --> 09:23.920]  es
+[09:23.920 --> 09:27.000]  porque ya probé 500.000 variantes
+[09:27.000 --> 09:31.120]  y la única variante que más o menos
+[09:31.160 --> 09:33.440]  lo explica
+[09:33.440 --> 09:36.440]  el power of three de
+[09:36.440 --> 09:39.440]  voy a sacar esto pero
+[09:43.720 --> 09:46.600]  que respetan normalmente
+[09:46.600 --> 09:48.400]  voy a mirar
+[09:48.400 --> 09:50.840]  qué pasa cuando yo
+[09:50.840 --> 09:54.080]  empiezo a
+[09:54.080 --> 09:57.480]  a llevar mi trading de smart money
+[09:57.480 --> 09:59.040]  más a tiempo y precio que lo que
+[09:59.040 --> 10:00.840]  estoy aplicando a día de hoy
+[10:00.840 --> 10:03.240]  me doy cuenta que
+[10:03.240 --> 10:04.680]  en smart money
+[10:04.680 --> 10:06.600]  ponerle si hay una venta acá
+[10:06.600 --> 10:09.520]  poner que es un bloque de ventas de acá
+[10:09.520 --> 10:11.240]  así
+[10:11.240 --> 10:14.320]  poner que se creó el bloquecito ahí y rompió acá
+[10:14.320 --> 10:16.440]  se acumuló nuevamente
+[10:16.440 --> 10:19.640]  y de la nada yo vengo y trato de vender acá
+[10:19.640 --> 10:23.240]  que es lo que le pasa a todo trader que opera por smart money
+[10:23.240 --> 10:24.520]  y hace esto
+[10:24.520 --> 10:26.360]  si se lo lleva
+[10:26.360 --> 10:29.960]  se lo lleva y capaz que después viene hace esto y sigue
+[10:30.000 --> 10:33.160]  o capaz que viene
+[10:33.160 --> 10:34.320]  hace esto
+[10:34.320 --> 10:37.480]  rompe, hace el market to to shift y después se rompe
+[10:37.480 --> 10:39.000]  entonces
+[10:39.000 --> 10:40.920]  qué me pasó
+[10:40.920 --> 10:43.800]  al darme cuenta de esto, me di cuenta de que
+[10:43.800 --> 10:45.680]  esto
+[10:45.680 --> 10:48.160]  terminaba siendo subjetivo
+[10:48.160 --> 10:50.200]  ¿te entiendes? es como
+[10:50.200 --> 10:52.560]  al final si estoy entrando acá
+[10:52.560 --> 10:54.240]  en una venta
+[10:54.240 --> 10:57.480]  estoy tomando la decisión de tirar una moneda al aire y decir
+[10:57.480 --> 10:59.720]  esa zona me va a reaccionar
+[11:00.680 --> 11:02.000]  entonces
+[11:02.000 --> 11:04.880]  cuando me di cuenta de por qué terminaban funcionando
+[11:04.880 --> 11:07.400]  era casi siempre lo mismo, casi siempre
+[11:07.400 --> 11:09.360]  una acumulación
+[11:09.360 --> 11:14.640]  una toma de liquidez que impactaba ahí en el PID array o en la zona de interés o en el punto de interés
+[11:14.640 --> 11:16.760]  el giro y recién la caída
+[11:16.760 --> 11:17.840]  y acá que se forma
+[11:17.840 --> 11:19.840]  la toma de liquidez
+[11:19.840 --> 11:20.800]  ¿te entiendes?
+[11:20.800 --> 11:23.440]  entonces esa toma de liquidez
+[11:23.440 --> 11:26.000]  cuando me meto de lleno en tiempo y precio
+[11:26.000 --> 11:28.560]  me di cuenta de que
+[11:28.600 --> 11:29.840]  como ya sabemos
+[11:29.840 --> 11:31.560]  es la mecha
+[11:31.560 --> 11:33.200]  claro es la mecha
+[11:33.200 --> 11:36.200]  y la acumulación casi siempre va a terminar siendo vacia
+[11:36.200 --> 11:38.200]  ¿bien? ¿estamos de acuerdo ahí?
+[11:38.200 --> 11:39.360]  ahora
+[11:39.360 --> 11:41.880]  lo que yo me interpreto después es que
+[11:41.880 --> 11:43.760]  por qué siempre
+[11:43.760 --> 11:45.960]  o casi siempre la vela
+[11:45.960 --> 11:47.800]  de las 21
+[11:47.800 --> 11:48.960]  esta vela
+[11:48.960 --> 11:53.680]  es la manipulada y la vela es la 5
+[11:53.680 --> 11:56.160]  es la que manipula
+[11:56.160 --> 11:57.360]  bueno acá falta una ¿no?
+[11:57.400 --> 12:01.520]  pero la de la 5 o la de la 1 es la que manipula cierto rango
+[12:01.520 --> 12:02.600]  entonces
+[12:02.600 --> 12:07.600]  ahí es donde le doy la lógica a este indicador de que
+[12:07.600 --> 12:09.320]  por ejemplo acá la vela de las 21
+[12:09.320 --> 12:11.840]  que es esta de acá
+[12:11.840 --> 12:14.160]  el cuadrante vamos a decir luego el cuadrante
+[12:14.160 --> 12:17.880]  ese que está ahí es manipulado recién ahí me da la señal
+[12:17.880 --> 12:20.440]  en dos horas
+[12:20.440 --> 12:22.640]  de que yo lo venda
+[12:22.640 --> 12:24.560]  acá lo vengo
+[12:24.560 --> 12:25.880]  yo vengo acá
+[12:25.960 --> 12:27.560]  me da la orden de venta
+[12:27.560 --> 12:29.520]  se cierra esta vela
+[12:29.520 --> 12:32.480]  tendría que ser la vela de las 3 de la mañana
+[12:32.480 --> 12:35.520]  se cierra y yo lo vendo en la siguiente impresión de vela
+[12:35.520 --> 12:38.080]  que justo da la casualidad que es
+[12:38.080 --> 12:40.360]  la apertura del power of three
+[12:40.360 --> 12:41.840]  de la vela
+[12:41.840 --> 12:43.560]  de las 5 de la mañana
+[12:43.560 --> 12:47.520]  es decir acá tendría que haber ejecutado el mercado
+[12:47.520 --> 12:48.360]  o entrar
+[12:48.360 --> 12:51.560]  al tomarse el alto de las 5
+[12:51.560 --> 12:52.920]  acá lo mismo
+[12:53.000 --> 12:55.240]  estoy viendo que también da
+[12:55.240 --> 12:59.320]  entrada por confirmación
+[12:59.320 --> 13:00.520]  claro casi siempre
+[13:00.520 --> 13:01.520]  ves, toma
+[13:01.520 --> 13:02.440]  gira
+[13:02.440 --> 13:03.440]  marque tu tuche
+[13:03.440 --> 13:05.240]  retestea y se compra
+[13:05.240 --> 13:06.160]  digamos
+[13:06.160 --> 13:08.840]  o sea cuando lo explicas se ve tan fácil
+[13:08.840 --> 13:13.160]  pero el tema de llegar a eso me imagino como
+[13:13.160 --> 13:15.440]  cuánto tiempo
+[13:15.440 --> 13:19.960]  no y darle la lógica al indicador pues mira este indicador
+[13:19.960 --> 13:21.640]  eee
+[13:21.760 --> 13:23.240]  tiene
+[13:23.240 --> 13:24.280]  para
+[13:24.280 --> 13:27.680]  setear la caja
+[13:27.680 --> 13:29.480]  para setear la caja
+[13:29.480 --> 13:32.520]  que se supone que voy a manipular
+[13:32.520 --> 13:36.040]  y cuando yo entro
+[13:36.040 --> 13:40.280]  esto lo hice con Chadgpt
+[13:40.280 --> 13:42.280]  cuando entro
+[13:42.280 --> 13:46.920]  abajo de todo le pedí a
+[13:46.960 --> 13:51.960]  Chadgpt que me de una hora de manipulación
+[13:51.960 --> 13:53.600]  qué pasa si yo le doy la
+[13:53.600 --> 13:54.720]  ¿viste? de Frankfurt
+[13:54.720 --> 13:57.400]  Frankfurt se supone que a las 2 de la mañana
+[13:57.400 --> 13:59.200]  el kia o miente
+[13:59.200 --> 14:01.000]  entonces
+[14:01.000 --> 14:02.920]  me pasaba que cuando
+[14:02.920 --> 14:07.800]  hacía el seguimiento de Frankfurt porque esto también lo seguí durante un par de meses solo con Frankfurt
+[14:07.800 --> 14:09.520]  y me di cuenta que no
+[14:09.520 --> 14:11.520]  era más errático que otra cosa
+[14:11.520 --> 14:13.720]  qué pasa si yo a las 3 de la mañana
+[14:13.720 --> 14:15.600]  acá configuro de que
+[14:15.680 --> 14:17.600]  la vela de las 3 de la mañana
+[14:17.600 --> 14:20.840]  sea la que me tiene que manipular el cuadrante o el rango
+[14:20.840 --> 14:22.680]  que se crea
+[14:22.680 --> 14:23.960]  si yo voy a 2 horas
+[14:23.960 --> 14:27.080]  me agrupa la impresión de la vela
+[14:27.080 --> 14:29.080]  de las 3 y las 4
+[14:29.080 --> 14:30.720]  ¿entiendes?
+[14:30.720 --> 14:33.200]  las 3 y las 4 entonces si yo ya
+[14:33.200 --> 14:34.720]  usando la lógica no
+[14:34.720 --> 14:37.240]  si yo ya
+[14:37.240 --> 14:41.080]  la vela de 3 y 4 se imprimió así
+[14:41.120 --> 14:43.120]  así tomando la liquidez haciendo un sweep
+[14:46.960 --> 14:48.360]  así
+[14:48.360 --> 14:49.480]  haciendo un sweep
+[14:49.480 --> 14:51.800]  quiere decir que en tiempo
+[14:51.800 --> 14:53.480]  pensándolo desde tiempo no
+[14:53.480 --> 14:56.520]  acá ya la toma liquidez
+[14:56.520 --> 14:59.720]  si ya esta vela de 2 horas me está cerrando
+[14:59.720 --> 15:02.640]  lo lógico es que adentro de esta vela
+[15:02.640 --> 15:04.440]  adentro de esta vela
+[15:04.440 --> 15:06.840]  ya ya
+[15:06.840 --> 15:08.520]  esto y esto
+[15:08.520 --> 15:10.760]  y probablemente esté en esa zona
+[15:10.800 --> 15:12.480]  entonces sin bajar la temporalidad
+[15:12.480 --> 15:15.200]  yo ya voy a tener si me cierro por abajo
+[15:15.200 --> 15:17.200]  un Marque de Tutu Shift
+[15:17.200 --> 15:18.080]  ¿te entiendes?
+[15:18.080 --> 15:20.640]  porque yo me volvía loco
+[15:20.640 --> 15:24.240]  también en buscarle la vuelta de que
+[15:24.240 --> 15:26.400]  me cierre esto
+[15:26.400 --> 15:27.800]  cierre esta vela
+[15:27.800 --> 15:30.800]  yo baja 5 minutos y en 5 minutos
+[15:31.720 --> 15:33.120]  me marque el Marque de Tutu Shift
+[15:33.120 --> 15:34.800]  por ejemplo acá
+[15:34.800 --> 15:38.480]  me marque el Marque de Tutu Shift que está de acá
+[15:38.480 --> 15:40.040]  así
+[15:40.040 --> 15:41.960]  y recién me dé la señal
+[15:41.960 --> 15:44.400]  y después dije no, pará
+[15:44.400 --> 15:46.280]  si ya me cierra la vela a las 5
+[15:46.280 --> 15:49.200]  mira, acá apertura
+[15:49.200 --> 15:51.600]  o sea a las 5 me está aperturando la vela
+[15:51.600 --> 15:54.600]  y me está cerrando la vela de las 3
+[15:54.600 --> 15:58.600]  que inicia acá
+[15:58.600 --> 15:59.840]  y me está cerrando acá abajo
+[15:59.840 --> 16:02.280]  aperturó, manipuló y cerró
+[16:02.280 --> 16:04.640]  más allá de que haya o no un Marque de Tutu Shift
+[16:04.640 --> 16:06.360]  ya giró el mercado
+[16:06.360 --> 16:07.840]  entonces
+[16:07.880 --> 16:10.440]  gracias a esa lógica digo bueno
+[16:10.440 --> 16:11.920]  lo único que me interesa es que
+[16:11.920 --> 16:13.560]  H2
+[16:13.560 --> 16:16.160]  la vela de 3 y 4
+[16:16.160 --> 16:17.240]  me cierre
+[16:17.240 --> 16:18.840]  así, tomando la liquidez
+[16:18.840 --> 16:19.880]  del rango anterior
+[16:19.880 --> 16:21.760]  tomando la liquidez del rango anterior
+[16:21.760 --> 16:24.200]  tomando la liquidez del rango anterior
+[16:24.200 --> 16:26.440]  y así sucesivamente siempre
+[16:26.440 --> 16:29.360]  entonces
+[16:29.360 --> 16:31.560]  lo mismo
+[16:31.560 --> 16:34.200]  esto mismo, esta misma lógica
+[16:34.200 --> 16:38.960]  cuando se lo das a
+[16:38.960 --> 16:42.800]  por ejemplo otro parque lo vi
+[16:42.800 --> 16:45.560]  acá por ejemplo te daba venta, mira
+[16:45.560 --> 16:47.800]  compra, stop loss y este era un
+[16:47.800 --> 16:49.640]  levemente de pena
+[16:49.640 --> 16:50.720]  eh, ¿dónde está?
+[16:50.720 --> 16:54.920]  Eurocat, creo que era, no, OSC de cat
+[16:54.920 --> 16:58.560]  OSC de cat
+[16:58.560 --> 17:00.160]  creo que era este
+[17:00.160 --> 17:02.000]  configurando
+[17:02.000 --> 17:03.920]  no lo voy a hacer ahora porque se me ha desarmado todo
+[17:03.920 --> 17:08.480]  configurando que el cuadrante sea de 5
+[17:08.480 --> 17:11.800]  a lo que vendría a ser 8 de la mañana
+[17:11.800 --> 17:15.280]  o no, 7 de la mañana
+[17:15.280 --> 17:18.400]  aquí está la vela
+[17:18.400 --> 17:22.720]  7
+[17:22.720 --> 17:26.200]  si, 9
+[17:26.200 --> 17:29.280]  configurando un cuadrante que era de 5
+[17:29.280 --> 17:33.160]  a 8
+[17:33.160 --> 17:38.200]  y le doy la orden al indicador de que la vela de las 9
+[17:38.200 --> 17:40.760]  si hace esto y cierra por abajo
+[17:40.760 --> 17:42.600]  en la vela de las 10 o 11
+[17:42.600 --> 17:44.720]  yo ya lo tengo que vender
+[17:44.720 --> 17:50.520]  entonces automáticamente apenas me cierre en H2
+[17:50.520 --> 17:52.920]  vendría a ser esto de acá
+[17:52.920 --> 17:54.480]  apenas me cierre esta vela de acá
+[17:54.480 --> 18:00.880]  ya me estaría dando la señal de venta
+[18:00.880 --> 18:02.360]  en vez de, o sea
+[18:02.400 --> 18:04.160]  en vez de aparecer la X acá
+[18:04.160 --> 18:07.360]  me estaría apareciendo la X acá arriba en venta
+[18:07.360 --> 18:10.240]  porque estaría seteado para que me manipule este rango
+[18:10.240 --> 18:12.800]  entonces siempre en el historial
+[18:12.800 --> 18:17.000]  por ejemplo acá daba la compra
+[18:17.000 --> 18:18.840]  acá
+[18:18.840 --> 18:19.920]  9 de la mañana
+[18:19.920 --> 18:25.160]  no, esta no, esta no, tampoco
+[18:25.160 --> 18:27.880]  pero tampoco
+[18:27.880 --> 18:31.600]  pero bueno, usa la misma lógica si lo llevo a otro tiempo
+[18:31.600 --> 18:38.400]  pero al menos con esta configuración que estoy llevando
+[18:38.400 --> 18:42.360]  lo que vendría a ser euro franco suizo
+[18:42.360 --> 18:48.200]  y euro cat creo que era
+[18:48.200 --> 18:50.760]  euro jpi
+[18:50.760 --> 18:56.280]  euro jpi relativamente respeta
+[18:56.280 --> 18:57.720]  ciertamente
+[18:57.720 --> 18:59.400]  entonces
+[18:59.440 --> 19:02.680]  que es lo que estoy pensando yo
+[19:02.680 --> 19:05.080]  usar esta misma lógica
+[19:05.080 --> 19:08.640]  por eso te pregunto si no, no hay forma de usar este mismo indicador
+[19:08.640 --> 19:10.360]  o el mismo código
+[19:10.360 --> 19:15.440]  para meterlo a metatrader
+[19:15.440 --> 19:18.880]  y darle un par de reglas más como para que ejecute el trade
+[19:18.880 --> 19:21.840]  en la apertura de la vela de las 5
+[19:21.840 --> 19:23.520]  por abajo es su apertura
+[19:23.520 --> 19:26.240]  la lógica sería
+[19:26.240 --> 19:29.560]  que cierre la vela de la 3
+[19:29.560 --> 19:32.520]  3 y 4 porque te agrupa las dos
+[19:32.520 --> 19:37.360]  Apertura la vela de la 5
+[19:37.360 --> 19:39.840]  y por abajo de su apertura si es compra
+[19:39.840 --> 19:42.040]  que lo compre directamente
+[19:42.040 --> 19:46.560]  o por arriba de su apertura si es venta que lo venda
+[19:46.560 --> 19:48.120]  esta sería la lógica
+[19:48.120 --> 19:50.480]  y el establo siempre por abajo de la estructura
+[19:50.480 --> 19:54.160]  ha de ser del último bajo que hizo
+[19:54.160 --> 19:56.000]  ¿entiendes?
+[19:56.000 --> 19:57.720]  si si te entiendo
+[19:57.720 --> 20:00.320]  pues el como tal el indicador
+[20:00.320 --> 20:02.960]  no se puede
+[20:02.960 --> 20:06.080]  como homologarlo sino toca crearlo de nuevo
+[20:06.080 --> 20:09.840]  pero con la base que tienes es más fácil
+[20:09.840 --> 20:12.120]  porque ya tiene la
+[20:12.120 --> 20:14.440]  como se dice ya tiene como la lógica
+[20:14.440 --> 20:17.280]  y ya tienes un resultado
+[20:17.280 --> 20:18.000]  visible
+[20:18.000 --> 20:21.640]  entonces cuando ya se corra con el metatrader y si no le funciona
+[20:21.640 --> 20:23.840]  si no le pinta lo que quiere pues ya es más
+[20:23.840 --> 20:25.840]  como más fácil ya es como un
+[20:25.880 --> 20:29.120]  como lo llaman como un debug o como
+[20:29.120 --> 20:31.440]  como una validación de pares entonces
+[20:31.440 --> 20:35.120]  lo que está en el metatrader es a lo que quieres llegar
+[20:35.120 --> 20:37.040]  perdón
+[20:37.040 --> 20:38.560]  y lo que haga el
+[20:38.560 --> 20:40.000]  el metatrader
+[20:40.000 --> 20:44.480]  perdón lo que está en el trading view es a lo que quieres llegar y lo que haga el metatrader
+[20:44.480 --> 20:49.920]  tiene que ser lo mismo que está en el trading view
+[20:49.920 --> 20:52.000]  si el tema es que por ejemplo
+[20:52.000 --> 20:54.240]  hay unos unas como
+[20:54.240 --> 20:56.960]  como unas cosas que que varían en metatrader
+[20:56.960 --> 20:59.280]  que metatrader siempre arranca
+[20:59.280 --> 21:02.000]  con el horario de
+[21:02.000 --> 21:04.240]  de donde está el broker
+[21:04.240 --> 21:06.440]  entonces por ejemplo yo tengo
+[21:06.440 --> 21:09.280]  la cuenta demo en vantage
+[21:09.280 --> 21:10.560]  y ella es
+[21:10.560 --> 21:12.800]  arranca la 0-0 de
+[21:12.800 --> 21:13.880]  de greenwich
+[21:13.880 --> 21:16.880]  entonces toca hacer la lógica
+[21:16.880 --> 21:18.120]  para que
+[21:18.120 --> 21:20.720]  tenga en cuenta que estos horarios nueva york
+[21:20.720 --> 21:24.560]  uts-4 y que tenga en cuenta cuando cambia el horario
+[21:24.560 --> 21:28.640]  por ejemplo eso es lo que afecta por ejemplo en los backtesting que yo he hecho
+[21:28.640 --> 21:31.640]  automatizados eso me molesta
+[21:31.640 --> 21:34.960]  porque el cambio de horario afecta
+[21:34.960 --> 21:38.040]  que fue lo que vimos con yair
+[21:38.040 --> 21:39.760]  entonces
+[21:39.760 --> 21:42.560]  por ejemplo estoy haciendo pruebas
+[21:42.560 --> 21:46.960]  cuando sé que realmente el horario no tuvo ningún cambio
+[21:46.960 --> 21:49.760]  y ahí aumenta mucho más la
+[21:49.800 --> 21:53.480]  la tasa de acierto
+[21:53.480 --> 21:55.360]  pues si quieres hacemos una cosa
+[21:55.360 --> 21:58.720]  no sé si ya me explicaste la
+[21:58.720 --> 22:01.320]  toda la estrategia
+[22:01.320 --> 22:04.320]  no sé si me puedes pasar el indicador que tienes
+[22:04.320 --> 22:06.520]  yo te lo homologo para
+[22:06.520 --> 22:08.320]  metatrader 5
+[22:08.320 --> 22:12.320]  y empezamos a trabajar sobre ese, yo te lo comparto para que lo vayas viendo
+[22:12.320 --> 22:14.240]  y lo vayas corriendo
+[22:14.240 --> 22:18.680]  y cuando ya tenga una versión que podamos validar
+[22:18.720 --> 22:21.800]  te explico cómo puedes hacer para que corras
+[22:21.800 --> 22:23.880]  periodos de meses años
+[22:23.880 --> 22:26.400]  y el mismo metatrader te va diciendo
+[22:26.400 --> 22:29.400]  cómo configurarlo
+[22:29.400 --> 22:32.880]  adicional dejamos variables por ejemplo el horario
+[22:32.880 --> 22:37.200]  entonces tú ya lo backtesteaste que en dos horas es lo mejor
+[22:37.200 --> 22:40.280]  entonces uno le puede decir quiero que lo varíe
+[22:40.280 --> 22:44.680]  en un minuto o dos horas o un día, el mismo lo va a variar
+[22:44.680 --> 22:46.280]  y va a correr la estrategia
+[22:46.280 --> 22:48.520]  con esa cantidad
+[22:49.480 --> 22:51.600]  de variables que podamos cambiarle
+[22:51.600 --> 22:53.720]  y te va a decir la mejor
+[22:53.720 --> 22:57.600]  no sé si quieres que te muestre un ejemplo de cómo lo hace
+[22:57.600 --> 22:59.160]  sí, a ver
+[22:59.160 --> 23:02.160]  mename yo creo es que
+[23:03.480 --> 23:05.280]  porque
+[23:05.280 --> 23:07.000]  nada la verdad que a ver
+[23:07.000 --> 23:08.560]  si
+[23:08.560 --> 23:11.320]  el tema yo la pensaba también, digo bueno a ver
+[23:11.320 --> 23:15.000]  el indicador en realidad tiene que bajar de temporaridad
+[23:15.000 --> 23:18.000]  o al menos no sé si es h2 darle
+[23:18.040 --> 23:21.040]  respecto a esta manipulación
+[23:22.000 --> 23:25.000]  un cierto descuento no?
+[23:25.720 --> 23:28.440]  pero bueno a ella la verdad que ya
+[23:28.440 --> 23:31.960]  me quedo como escaso en contenido como para decir bueno que
+[23:31.960 --> 23:34.720]  cómo lo configura
+[23:34.720 --> 23:37.120]  entendés o que impacte en un bloque
+[23:37.120 --> 23:40.800]  o el 50% de una ineficiencia ya como el
+[23:40.800 --> 23:43.200]  el punto de entrada cuando esto ya sucedió
+[23:43.200 --> 23:44.680]  esto de acá
+[23:44.680 --> 23:47.680]  el punto de entrada es casi
+[23:47.720 --> 23:50.320]  casi aleatorio no? porque si gatillo acaba
+[23:50.320 --> 23:52.360]  va a llegar al tp igual
+[23:52.360 --> 23:56.360]  lo único que va a variar es el riesgo de beneficio
+[23:57.520 --> 23:59.480]  pero bueno por lo que yo
+[23:59.480 --> 24:01.840]  cómo lo configuraría sería
+[24:01.840 --> 24:03.440]  máximo al 1 a 2
+[24:03.440 --> 24:06.200]  y que cierre al total
+[24:06.200 --> 24:08.160]  entrando
+[24:08.160 --> 24:10.160]  al menos desde un punto de interés
+[24:10.160 --> 24:11.200]  pero
+[24:11.200 --> 24:14.960]  a ella te digo que estoy escaso de contenido como para decirle bueno
+[24:15.040 --> 24:18.520]  o cómo configurar para que marque sólo este bloquecito porque ahora la lógica
+[24:18.520 --> 24:20.120]  que estoy usando es
+[24:20.120 --> 24:21.640]  cuadrante que es de tiempo
+[24:21.640 --> 24:22.680]  basado
+[24:22.680 --> 24:24.320]  en el rectángulo de
+[24:24.320 --> 24:26.320]  de las velas de h4
+[24:29.200 --> 24:31.440]  y después velas de h2
+[24:31.440 --> 24:34.440]  ok, o sea si estás haciendo la va cayendo
+[24:36.000 --> 24:37.960]  h4, h2
+[24:37.960 --> 24:39.920]  lo que me imagino es
+[24:39.920 --> 24:42.360]  la señal se da en h4
+[24:42.400 --> 24:45.400]  cuando se dé la señal tiene que empezar a redefinir
+[24:47.640 --> 24:51.000]  h2 y cuando esté en h2 redefina
+[24:51.000 --> 24:52.720]  a m15
+[24:52.720 --> 24:54.840]  ya en realidad
+[24:54.840 --> 24:56.560]  la señal te la entrega
+[24:56.560 --> 24:59.360]  en dos
+[24:59.360 --> 25:01.960]  al cierre de la vela de las 3 de la mañana
+[25:01.960 --> 25:04.440]  que agrupa 3 y 4 de la mañana
+[25:04.440 --> 25:08.000]  entonces ejecutas en la vela de
+[25:08.000 --> 25:11.000]  de las 5
+[25:12.000 --> 25:15.800]  después el caso donde la vela de las 9 vuelve a liquidar
+[25:15.800 --> 25:17.640]  pero
+[25:17.640 --> 25:20.480]  yo lo que quiero hacer es
+[25:20.480 --> 25:23.080]  tirarle una muestra, obviamente con
+[25:23.080 --> 25:26.080]  si llego no sé a configurarlo tal cual como esté entre in-view
+[25:28.520 --> 25:29.400]  que corra
+[25:29.400 --> 25:32.080]  por ejemplo acá era tp, acá era tp, acá era stop-lo
+[25:32.080 --> 25:33.880]  pero
+[25:33.880 --> 25:37.960]  yo estoy seguro que está por arriba del 50% en backtesting
+[25:37.960 --> 25:39.320]  entrando a todas
+[25:39.360 --> 25:41.240]  sin filtrar
+[25:41.240 --> 25:42.400]  filtrando
+[25:42.400 --> 25:44.440]  yo creo que
+[25:44.440 --> 25:47.080]  es mucho más elevado
+[25:48.560 --> 25:49.400]  de hecho
+[25:49.400 --> 25:51.520]  yo te comparto el
+[25:51.520 --> 25:53.560]  no sé cómo se puede publicar esto
+[25:53.560 --> 25:55.560]  lo puedes copiar
+[25:55.560 --> 25:57.200]  copiarlo y
+[25:57.200 --> 25:59.400]  me lo pegas en un
+[25:59.400 --> 26:00.800]  en un note pad
+[26:00.800 --> 26:03.800]  bueno te mando un link
+[26:03.800 --> 26:05.640]  o sea lo copio así como está?
+[26:05.640 --> 26:07.040]  no no
+[26:07.080 --> 26:09.880]  ese, el código, le das copiar
+[26:09.880 --> 26:12.880]  lo seleccionas todo, control A creo que funciona
+[26:14.880 --> 26:17.880]  ahí y lo copias
+[26:17.880 --> 26:19.920]  y yo te creo aquí en la carpeta
+[26:19.920 --> 26:22.920]  y voy pegándole todo
+[26:25.840 --> 26:27.560]  en el drive
+[26:27.560 --> 26:30.400]  nuevo documento
+[26:30.400 --> 26:33.400]  entonces este documento
+[26:33.400 --> 26:35.120]  te lo paso
+[26:35.160 --> 26:38.160]  ahí es, ah te voy a dar desacceso a la carpeta
+[26:38.160 --> 26:40.080]  entonces yo tengo ahí una carpeta con
+[26:40.080 --> 26:42.520]  con espacio
+[26:42.520 --> 26:46.240]  y esa carpeta solo
+[26:46.240 --> 26:49.240]  propietario, copiar enlace
+[26:51.160 --> 26:53.840]  entonces en esta carpeta
+[26:55.320 --> 26:57.280]  cree una
+[26:57.280 --> 26:59.240]  un documento
+[26:59.240 --> 27:02.600]  y este documento lo pegas entonces ahí yo ya lo puedo
+[27:02.600 --> 27:05.600]  ya lo puedo tener
+[27:13.160 --> 27:14.600]  estrategia?
+[27:14.600 --> 27:17.600]  si, correcto, ahí es lo que cree en blanco
+
+
