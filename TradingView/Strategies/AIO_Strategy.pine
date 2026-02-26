@@ -158,7 +158,65 @@ atrShortSL = high + atrValue
 atrLongSL  = low  - atrValue
 
 // ───────────────────────────────────────────────────────────────────────────
-// ► SECCIÓN 4 — SEÑALES Y EJECUCIÓN DE ESTRATEGIA
+// ► SECCIÓN 4a — KILL ZONES (filtro horario por sesión)
+// ───────────────────────────────────────────────────────────────────────────
+// Horarios ICT estándar (UTC):
+//   Asia   : 20:00 – 00:00 UTC  (8pm–12am)
+//   London : 02:00 – 05:00 UTC  (2am–5am)
+//   NY AM  : 12:00 – 15:00 UTC  (7am–10am ET)
+//   NY PM  : 17:00 – 20:00 UTC  (12pm–3pm ET  / NY Lunch→Close)
+// ───────────────────────────────────────────────────────────────────────────
+grpKZ = "── Kill Zones ──"
+
+kzUseAsia   = input.bool(true,  "Activar Asia KZ",                  group = grpKZ)
+kzAsiaStart = input.int(20, "Asia inicio (hora UTC)",               group = grpKZ, minval = 0, maxval = 23)
+kzAsiaEnd   = input.int(0,  "Asia fin (hora UTC)",                  group = grpKZ, minval = 0, maxval = 23)
+
+kzUseLDN    = input.bool(true,  "Activar London KZ",                group = grpKZ)
+kzLDNStart  = input.int(2,  "London inicio (hora UTC)",             group = grpKZ, minval = 0, maxval = 23)
+kzLDNEnd    = input.int(5,  "London fin (hora UTC)",                group = grpKZ, minval = 0, maxval = 23)
+
+kzUseNYAM   = input.bool(true,  "Activar New York AM KZ",           group = grpKZ)
+kzNYAMStart = input.int(12, "NY AM inicio (hora UTC)",              group = grpKZ, minval = 0, maxval = 23)
+kzNYAMEnd   = input.int(15, "NY AM fin (hora UTC)",                 group = grpKZ, minval = 0, maxval = 23)
+
+kzUseNYPM   = input.bool(false, "Activar New York PM KZ",           group = grpKZ)
+kzNYPMStart = input.int(17, "NY PM inicio (hora UTC)",              group = grpKZ, minval = 0, maxval = 23)
+kzNYPMEnd   = input.int(20, "NY PM fin (hora UTC)",                 group = grpKZ, minval = 0, maxval = 23)
+
+kzShowBG    = input.bool(true,  "Mostrar fondo en Kill Zones",      group = grpKZ)
+kzBGAlpha   = input.int(92,     "Transparencia fondo (0-100)",      group = grpKZ, minval = 0, maxval = 100)
+
+// ── Función auxiliar: hora UTC actual ──
+// Usamos syminfo.timezone para convertir; si el exchange ya es UTC, hour(time) basta.
+// Para asegurar UTC usamos "Etc/UTC".
+_utcH = hour(time, "Etc/UTC")
+
+// ── Verificar si estamos dentro de una KZ ──
+// Soporte para rangos que cruzan medianoche (ej. Asia 20→0)
+_inRange(int h, int startH, int endH) =>
+    startH <= endH ? (h >= startH and h < endH) : (h >= startH or h < endH)
+
+inAsia  = kzUseAsia  and _inRange(_utcH, kzAsiaStart, kzAsiaEnd)
+inLDN   = kzUseLDN   and _inRange(_utcH, kzLDNStart,  kzLDNEnd)
+inNYAM  = kzUseNYAM  and _inRange(_utcH, kzNYAMStart, kzNYAMEnd)
+inNYPM  = kzUseNYPM  and _inRange(_utcH, kzNYPMStart, kzNYPMEnd)
+
+inKillZone = inAsia or inLDN or inNYAM or inNYPM
+
+// ── Background visual de Kill Zones ──
+_kzAsiaClr = color.new(color.purple, kzBGAlpha)
+_kzLDNClr  = color.new(color.blue,   kzBGAlpha)
+_kzNYAMClr = color.new(color.orange,  kzBGAlpha)
+_kzNYPMClr = color.new(color.yellow,  kzBGAlpha)
+
+bgcolor(kzShowBG and inAsia  ? _kzAsiaClr : na, title = "BG Asia")
+bgcolor(kzShowBG and inLDN   ? _kzLDNClr  : na, title = "BG London")
+bgcolor(kzShowBG and inNYAM  ? _kzNYAMClr : na, title = "BG NY AM")
+bgcolor(kzShowBG and inNYPM  ? _kzNYPMClr : na, title = "BG NY PM")
+
+// ───────────────────────────────────────────────────────────────────────────
+// ► SECCIÓN 4b — SEÑALES Y EJECUCIÓN DE ESTRATEGIA
 // ───────────────────────────────────────────────────────────────────────────
 grpEntry = "── Señales de Entrada ──"
 
@@ -221,8 +279,8 @@ var float _activeSellSL    = na
 var float _activeBuyEntry  = na
 var float _activeBuySL     = na
 
-// ── EJECUTAR entradas ─────────────────────────────────────────────────
-if sellSignalExec and strategy.position_size == 0 and not na(sellEntryPx)
+// ── EJECUTAR entradas (solo dentro de Kill Zones) ─────────────────────
+if sellSignalExec and inKillZone and strategy.position_size == 0 and not na(sellEntryPx)
     if _isLimit
         strategy.entry("SELL", strategy.short, limit = sellEntryPx)
     else
@@ -231,7 +289,7 @@ if sellSignalExec and strategy.position_size == 0 and not na(sellEntryPx)
     _activeSellEntry := sellEntryPx
     _activeSellSL    := sellSL
 
-if buySignalExec and strategy.position_size == 0 and not na(buyEntryPx)
+if buySignalExec and inKillZone and strategy.position_size == 0 and not na(buyEntryPx)
     if _isLimit
         strategy.entry("BUY", strategy.long, limit = buyEntryPx)
     else
@@ -265,10 +323,15 @@ if _isLimit
             strategy.cancel("BUY")
 
 // ── Plots visuales ───────────────────────────────────────────────────
-plotshape(sellSignalExec and strategy.position_size == 0 ? high : na,
+plotshape(sellSignalExec and inKillZone and strategy.position_size == 0 ? high : na,
      "Sell Signal", shape.triangledown, location.abovebar, color.red, size = size.small)
-plotshape(buySignalExec and strategy.position_size == 0 ? low : na,
+plotshape(buySignalExec and inKillZone and strategy.position_size == 0 ? low : na,
      "Buy Signal", shape.triangleup, location.belowbar, color.teal, size = size.small)
+// Señales fuera de KZ (informativas, gris tenue)
+plotshape(sellSignalExec and not inKillZone and strategy.position_size == 0 ? high : na,
+     "Sell (fuera KZ)", shape.triangledown, location.abovebar, color.new(color.gray, 70), size = size.tiny)
+plotshape(buySignalExec and not inKillZone and strategy.position_size == 0 ? low : na,
+     "Buy (fuera KZ)", shape.triangleup, location.belowbar, color.new(color.gray, 70), size = size.tiny)
 
 // ATR SL visual
 plot(atrShortSL, "ATR Short SL", color = color.new(color.red, 80), linewidth = 1)

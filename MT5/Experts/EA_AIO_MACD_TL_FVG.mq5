@@ -44,6 +44,20 @@ input double          InpBEMult       = 2.0;              // Multiplicador Break
 input bool            InpUseBE        = true;             // Activar Break Even
 input string          InpEntryType    = "Limit";          // Tipo entrada: Limit / Market
 
+//--- Input: Kill Zones (horas UTC)
+input bool            InpKZAsia       = true;              // Activar Asia KZ
+input int             InpKZAsiaStart  = 20;                // Asia inicio (hora UTC)
+input int             InpKZAsiaEnd    = 0;                 // Asia fin (hora UTC)
+input bool            InpKZLondon     = true;              // Activar London KZ
+input int             InpKZLDNStart   = 2;                 // London inicio (hora UTC)
+input int             InpKZLDNEnd     = 5;                 // London fin (hora UTC)
+input bool            InpKZNYAM       = true;              // Activar NY AM KZ
+input int             InpKZNYAMStart  = 12;                // NY AM inicio (hora UTC)
+input int             InpKZNYAMEnd    = 15;                // NY AM fin (hora UTC)
+input bool            InpKZNYPM       = false;             // Activar NY PM KZ
+input int             InpKZNYPMStart  = 17;                // NY PM inicio (hora UTC)
+input int             InpKZNYPMEnd    = 20;                // NY PM fin (hora UTC)
+
 //--- Input: Money Management
 input double          InpRiskPct      = 2.0;              // % de riesgo por trade
 input ulong           InpMagic        = 202602;           // Magic Number
@@ -101,6 +115,31 @@ void OnDeinit(const int reason)
     if(hMacd  != INVALID_HANDLE) IndicatorRelease(hMacd);
     if(hAtr   != INVALID_HANDLE) IndicatorRelease(hAtr);
     if(hAtrSl != INVALID_HANDLE) IndicatorRelease(hAtrSl);
+}
+
+//+------------------------------------------------------------------+
+//| Kill Zone check — returns true if current UTC hour is in a KZ     |
+//+------------------------------------------------------------------+
+bool InRange(int h, int startH, int endH)
+{
+    if(startH <= endH)
+        return (h >= startH && h < endH);
+    else  // cruza medianoche (ej. Asia 20→0)
+        return (h >= startH || h < endH);
+}
+
+bool IsInKillZone()
+{
+    MqlDateTime dt;
+    TimeGMT(dt);
+    int h = dt.hour;
+    
+    if(InpKZAsia   && InRange(h, InpKZAsiaStart, InpKZAsiaEnd))   return true;
+    if(InpKZLondon && InRange(h, InpKZLDNStart,  InpKZLDNEnd))    return true;
+    if(InpKZNYAM   && InRange(h, InpKZNYAMStart, InpKZNYAMEnd))   return true;
+    if(InpKZNYPM   && InRange(h, InpKZNYPMStart, InpKZNYPMEnd))   return true;
+    
+    return false;
 }
 
 //+------------------------------------------------------------------+
@@ -298,6 +337,14 @@ void OnTick()
     double atrSlVal = atrSlBuf[0] * InpAtrSlMult;
     double shortSL  = curHigh + atrSlVal;
     double longSL   = curLow - atrSlVal;
+
+    // ── Filtro Kill Zone ──
+    if(!IsInKillZone())
+    {
+        // Fuera de Kill Zone: no abrir posiciones nuevas
+        ManageBreakEven();  // pero seguir gestionando posiciones abiertas
+        return;
+    }
 
     // ── Ejecutar SELL ──
     if(sellSig && CountPositions(POSITION_TYPE_SELL) == 0 && CountPositions(POSITION_TYPE_BUY) == 0)
