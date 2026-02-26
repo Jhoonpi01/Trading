@@ -1,0 +1,275 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// ESTRATEGIA: MACD MTF + iFVG/BPR + Trendlines with Breaks
+// ───────────────────────────────────────────────────────────────────────────
+// Convierte el indicador AIO en una estrategia backtesteable.
+// Lógica de confluencia:
+//   1. Ruptura de trendline (LuxAlgo) en la dirección del trade
+//   2. MACD confirma con cruce en la misma dirección (ventana N velas)
+//   3. Entrada en FVG/BPR o a mercado
+//   4. SL = ATR Stop Loss Finder (high + ATR*mult  /  low − ATR*mult)
+//   5. BE y TP proporcionales al riesgo real
+// ═══════════════════════════════════════════════════════════════════════════
+//@version=6
+strategy("AIO Strategy: MACD + iFVG + TL Breaks",
+     shorttitle        = "AIO Strat",
+     overlay           = true,
+     initial_capital   = 10000,
+     default_qty_type  = strategy.percent_of_equity,
+     default_qty_value = 2,
+     commission_type   = strategy.commission.percent,
+     commission_value  = 0.04,
+     slippage          = 2,
+     pyramiding        = 0,
+     max_boxes_count   = 500,
+     max_labels_count  = 500,
+     max_lines_count   = 500,
+     max_bars_back     = 500)
+
+// ───────────────────────────────────────────────────────────────────────────
+// ► SECCIÓN 1 — MACD MULTI-TIMEFRAME
+// ───────────────────────────────────────────────────────────────────────────
+grpMACD = "── MACD Multi-Timeframe ──"
+
+useCurrentRes = input.bool(true,  "Usar temporalidad del gráfico",  group = grpMACD)
+resCustom     = input.timeframe("60", "Temporalidad personalizada", group = grpMACD)
+fastLen       = input.int(12, "EMA rápida",    minval = 1,          group = grpMACD)
+slowLen       = input.int(26, "EMA lenta",     minval = 1,          group = grpMACD)
+signalLen     = input.int(9,  "Señal (SMA)",   minval = 1,          group = grpMACD)
+
+macdRes = useCurrentRes ? timeframe.period : resCustom
+
+getMacdPrimitives() =>
+    fast   = ta.ema(close, fastLen)
+    slow_  = ta.ema(close, slowLen)
+    _macd  = fast - slow_
+    _sig   = ta.sma(_macd, signalLen)
+    _hist  = _macd - _sig
+    [_macd, _sig, _hist]
+
+[outMacd, outSig, outHist] = request.security(syminfo.tickerid, macdRes, getMacdPrimitives())
+
+macdAbove = outMacd >= outSig
+macdCross = ta.cross(outMacd, outSig)
+crossUp   = macdCross and macdAbove
+crossDown = macdCross and not macdAbove
+
+// ───────────────────────────────────────────────────────────────────────────
+// ► SECCIÓN 2 — TRENDLINES WITH BREAKS  (© LuxAlgo)
+// ───────────────────────────────────────────────────────────────────────────
+grpTL = "── Trendlines with Breaks ──"
+
+tlLength     = input.int(14,    "Swing Detection Lookback",         group = grpTL, minval = 1)
+tlMult       = input.float(1.0, "Slope",                            group = grpTL, minval = 0, step = 0.1)
+tlCalcMethod = input.string("Atr", "Slope Method",
+     options = ["Atr", "Stdev", "Linreg"],                          group = grpTL)
+tlBackpaint  = input.bool(true,  "Backpaint",                       group = grpTL)
+
+var float tl_upper    = 0.
+var float tl_lower    = 0.
+var float tl_slope_ph = 0.
+var float tl_slope_pl = 0.
+
+tl_n  = bar_index
+tl_ph = ta.pivothigh(tlLength, tlLength)
+tl_pl = ta.pivotlow (tlLength, tlLength)
+
+_linreg_num = math.abs(ta.sma(close * tl_n, tlLength) - ta.sma(close, tlLength) * ta.sma(tl_n, tlLength))
+_linreg_slope = _linreg_num / ta.variance(tl_n, tlLength) / 2 * tlMult
+
+tl_slope = switch tlCalcMethod
+    "Atr"    => ta.atr(tlLength) / tlLength * tlMult
+    "Stdev"  => ta.stdev(close, tlLength) / tlLength * tlMult
+    "Linreg" => _linreg_slope
+
+tl_slope_ph := not na(tl_ph) ? tl_slope : tl_slope_ph
+tl_slope_pl := not na(tl_pl) ? tl_slope : tl_slope_pl
+
+tl_upper := not na(tl_ph) ? tl_ph : tl_upper - tl_slope_ph
+tl_lower := not na(tl_pl) ? tl_pl : tl_lower + tl_slope_pl
+
+var int tl_upos = 0
+var int tl_dnos = 0
+tl_upos := not na(tl_ph) ? 0 : close > tl_upper - tl_slope_ph * tlLength ? 1 : tl_upos
+tl_dnos := not na(tl_pl) ? 0 : close < tl_lower + tl_slope_pl * tlLength ? 1 : tl_dnos
+
+// Plots de trendlines
+tl_offset = tlBackpaint ? tlLength : 0
+plot(tlBackpaint ? tl_upper : tl_upper - tl_slope_ph * tlLength,
+     "Upper TL", color = not na(tl_ph) ? na : color.teal, offset = -tl_offset)
+plot(tlBackpaint ? tl_lower : tl_lower + tl_slope_pl * tlLength,
+     "Lower TL", color = not na(tl_pl) ? na : color.red, offset = -tl_offset)
+
+// ───────────────────────────────────────────────────────────────────────────
+// ► SECCIÓN 3 — iFVG (detección simplificada para estrategia)
+// ───────────────────────────────────────────────────────────────────────────
+grpFVG = "── iFVG ──"
+fvg_tmf = input.timeframe("", "FVG Timeframe", group = grpFVG)
+useEntryMid = input.bool(false, "Entrada en mid FVG (si no: extremo)", group = grpFVG)
+
+FVG_GAP_PCT = 0.009
+
+getFvgData() =>
+    isBull = low > high[2] and close[1] > high[2] and (low - high[2]) / high[2] * 100 > FVG_GAP_PCT
+    isBear = high < low[2] and close[1] < low[2]  and (low[2] - high) / high * 100 > FVG_GAP_PCT
+    fType  = isBull ? 1 : isBear ? -1 : 0
+    fTop   = isBull ? low     : isBear ? low[2] : float(na)
+    fBtm   = isBull ? high[2] : isBear ? high   : float(na)
+    [fType, fTop, fBtm]
+
+[fd_type, fd_top, fd_btm] = request.security(syminfo.tickerid, fvg_tmf, getFvgData())
+
+var float _lastBearTop = na
+var float _lastBearBtm = na
+var float _lastBullTop = na
+var float _lastBullBtm = na
+
+if not na(fd_type)
+    if fd_type == -1
+        _lastBearTop := fd_top
+        _lastBearBtm := fd_btm
+    else if fd_type == 1
+        _lastBullTop := fd_top
+        _lastBullBtm := fd_btm
+
+// ───────────────────────────────────────────────────────────────────────────
+// ► PRE-CÁLCULO ATR STOP LOSS FINDER
+// ───────────────────────────────────────────────────────────────────────────
+grpAtrSl = "── ATR Stop Loss ──"
+
+atrSlLength    = input.int(14,       "Periodo ATR",         group = grpAtrSl, minval = 1)
+atrSlSmoothing = input.string("RMA", "Tipo de suavizado",  group = grpAtrSl,
+     options = ["RMA", "SMA", "EMA", "WMA"])
+atrSlMult      = input.float(1.5,    "Multiplicador ATR",   group = grpAtrSl, minval = 0.1, step = 0.1)
+
+atrSlMaFunction(source, length) =>
+    float result = na
+    if atrSlSmoothing == "RMA"
+        result := ta.rma(source, length)
+    else if atrSlSmoothing == "SMA"
+        result := ta.sma(source, length)
+    else if atrSlSmoothing == "EMA"
+        result := ta.ema(source, length)
+    else
+        result := ta.wma(source, length)
+    result
+
+atrValue   = atrSlMaFunction(ta.tr(true), atrSlLength) * atrSlMult
+atrShortSL = high + atrValue
+atrLongSL  = low  - atrValue
+
+// ───────────────────────────────────────────────────────────────────────────
+// ► SECCIÓN 4 — SEÑALES Y EJECUCIÓN DE ESTRATEGIA
+// ───────────────────────────────────────────────────────────────────────────
+grpEntry = "── Señales de Entrada ──"
+
+entryWindow = input.int(3,      "Ventana de confirmación (velas)",  group = grpEntry, minval = 1, maxval = 10)
+rrRatio     = input.float(3.0,  "Ratio R:R (TP = RR × Riesgo)",   group = grpEntry, minval = 1.0, step = 0.5)
+entryType   = input.string("Limit (FVG)", "Tipo de entrada",      group = grpEntry,
+     options = ["Limit (FVG)", "Mercado (cierre)", "Mercado (apertura sig. vela)"])
+useBE       = input.bool(true,  "Activar Break Even",              group = grpEntry)
+beMult      = input.float(2.0,  "Multiplicador BE (× riesgo)",    group = grpEntry, minval = 1.0, step = 0.5)
+
+// ── Contadores de velas desde último evento ────────────────────────────
+var int _bTlDn = 999
+var int _bTlUp = 999
+var int _bMcDn = 999
+var int _bMcUp = 999
+
+_tlBreakDn = tl_dnos > tl_dnos[1]
+_tlBreakUp = tl_upos > tl_upos[1]
+
+_bTlDn := _tlBreakDn ? 0 : math.min(_bTlDn + 1, 999)
+_bTlUp := _tlBreakUp ? 0 : math.min(_bTlUp + 1, 999)
+_bMcDn := crossDown   ? 0 : math.min(_bMcDn + 1, 999)
+_bMcUp := crossUp     ? 0 : math.min(_bMcUp + 1, 999)
+
+// ── Señal: confluencia en misma ventana ───────────────────────────────
+sellSignal = (_tlBreakDn and _bMcDn <= entryWindow)
+             or (crossDown and _bTlDn <= entryWindow and _bTlDn > 0)
+buySignal  = (_tlBreakUp and _bMcUp  <= entryWindow)
+             or (crossUp  and _bTlUp  <= entryWindow and _bTlUp  > 0)
+
+// ── Tipo de entrada ───────────────────────────────────────────────────
+_isLimit          = entryType == "Limit (FVG)"
+_isMarketClose    = entryType == "Mercado (cierre)"
+_isMarketNextOpen = entryType == "Mercado (apertura sig. vela)"
+
+sellSignalExec = _isMarketNextOpen ? sellSignal[1] : sellSignal
+buySignalExec  = _isMarketNextOpen ? buySignal[1]  : buySignal
+
+// ── Precio de entrada ─────────────────────────────────────────────────
+_sellLimitPx = useEntryMid ? (_lastBearTop + _lastBearBtm) / 2 : _lastBearBtm
+_buyLimitPx  = useEntryMid ? (_lastBullTop + _lastBullBtm) / 2 : _lastBullTop
+
+sellEntryPx = _isLimit ? _sellLimitPx : open
+buyEntryPx  = _isLimit ? _buyLimitPx  : open
+
+// ── Niveles SL / TP ──────────────────────────────────────────────────
+sellSL    = atrShortSL
+_sellRisk = math.abs(sellSL - sellEntryPx)
+sellTP    = sellEntryPx - _sellRisk * rrRatio
+sellBE    = sellEntryPx - _sellRisk * beMult
+
+buySL     = atrLongSL
+_buyRisk  = math.abs(buyEntryPx - buySL)
+buyTP     = buyEntryPx + _buyRisk * rrRatio
+buyBE     = buyEntryPx + _buyRisk * beMult
+
+// ── Variables de estado para Break Even ───────────────────────────────
+var float _activeSellEntry = na
+var float _activeSellSL    = na
+var float _activeBuyEntry  = na
+var float _activeBuySL     = na
+
+// ── EJECUTAR entradas ─────────────────────────────────────────────────
+if sellSignalExec and strategy.position_size == 0 and not na(sellEntryPx)
+    if _isLimit
+        strategy.entry("SELL", strategy.short, limit = sellEntryPx)
+    else
+        strategy.entry("SELL", strategy.short)
+    strategy.exit("SELL_EXIT", from_entry = "SELL", stop = sellSL, limit = sellTP)
+    _activeSellEntry := sellEntryPx
+    _activeSellSL    := sellSL
+
+if buySignalExec and strategy.position_size == 0 and not na(buyEntryPx)
+    if _isLimit
+        strategy.entry("BUY", strategy.long, limit = buyEntryPx)
+    else
+        strategy.entry("BUY", strategy.long)
+    strategy.exit("BUY_EXIT", from_entry = "BUY", stop = buySL, limit = buyTP)
+    _activeBuyEntry := buyEntryPx
+    _activeBuySL    := buySL
+
+// ── Break Even: mover SL a entry cuando precio alcanza BE ────────────
+if useBE and strategy.position_size < 0 and not na(_activeSellEntry)
+    if low <= sellBE  // precio llegó al profit de BE
+        strategy.exit("SELL_EXIT", from_entry = "SELL", stop = _activeSellEntry, limit = sellTP)
+
+if useBE and strategy.position_size > 0 and not na(_activeBuyEntry)
+    if high >= buyBE  // precio llegó al profit de BE
+        strategy.exit("BUY_EXIT", from_entry = "BUY", stop = _activeBuyEntry, limit = buyTP)
+
+// Limpiar estado al cerrar posición
+if strategy.position_size == 0
+    _activeSellEntry := na
+    _activeSellSL    := na
+    _activeBuyEntry  := na
+    _activeBuySL     := na
+
+// ── Cancelar órdenes pendientes después de N velas ────────────────────
+if _isLimit
+    if strategy.position_size == 0
+        if bar_index - ta.valuewhen(sellSignalExec, bar_index, 0) > entryWindow * 2
+            strategy.cancel("SELL")
+        if bar_index - ta.valuewhen(buySignalExec, bar_index, 0) > entryWindow * 2
+            strategy.cancel("BUY")
+
+// ── Plots visuales ───────────────────────────────────────────────────
+plotshape(sellSignalExec and strategy.position_size == 0 ? high : na,
+     "Sell Signal", shape.triangledown, location.abovebar, color.red, size = size.small)
+plotshape(buySignalExec and strategy.position_size == 0 ? low : na,
+     "Buy Signal", shape.triangleup, location.belowbar, color.teal, size = size.small)
+
+// ATR SL visual
+plot(atrShortSL, "ATR Short SL", color = color.new(color.red, 80), linewidth = 1)
+plot(atrLongSL,  "ATR Long SL",  color = color.new(color.teal, 80), linewidth = 1)
