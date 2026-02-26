@@ -360,6 +360,32 @@ if showFVG and fvg_o != fvg_o[1]
                  text = "FVG", textcolor = fdClr))
 
 // ───────────────────────────────────────────────────────────────────────────
+// ► PRE-CÁLCULO ATR SL (compartido entre Sección 4 y Sección 5)
+// ───────────────────────────────────────────────────────────────────────────
+grpAtrSl = "── ATR Stop Loss Finder ──"
+
+atrSlLength     = input.int(14,       "Periodo ATR",               group = grpAtrSl, minval = 1)
+atrSlSmoothing  = input.string("RMA", "Tipo de suavizado",        group = grpAtrSl,
+     options = ["RMA", "SMA", "EMA", "WMA"])
+atrSlMult       = input.float(1.5,    "Multiplicador ATR",         group = grpAtrSl, minval = 0.1, step = 0.1)
+
+atrSlMaFunction(source, length) =>
+    float result = na
+    if atrSlSmoothing == "RMA"
+        result := ta.rma(source, length)
+    else if atrSlSmoothing == "SMA"
+        result := ta.sma(source, length)
+    else if atrSlSmoothing == "EMA"
+        result := ta.ema(source, length)
+    else
+        result := ta.wma(source, length)
+    result
+
+atrValue   = atrSlMaFunction(ta.tr(true), atrSlLength) * atrSlMult
+atrShortSL = high + atrValue   // Stop Loss para SHORT
+atrLongSL  = low  - atrValue   // Stop Loss para LONG
+
+// ───────────────────────────────────────────────────────────────────────────
 // ► SECCIÓN 4 — SEÑALES DE ENTRADA (TL Break + MACD + FVG/BPR)
 // ─────────────────────────────────────────────────────────────────────────
 // Lógica:
@@ -375,9 +401,10 @@ grpEntry = "── Señales de Entrada ──"
 showEntries  = input.bool(true,  "Activar señales de entrada",              group = grpEntry)
 entryWindow  = input.int(3,      "Ventana de confirmación (velas)",         group = grpEntry, minval = 1, maxval = 10)
 showLevels   = input.bool(true,  "Mostrar SL / BE / TP",                   group = grpEntry)
-rrRatio      = input.float(3.0,  "Ratio R:R (TP = RR × ATR)",             group = grpEntry, minval = 1.0, step = 0.5)
-slAtrMult    = input.float(1.0,  "Multiplicador ATR para SL",              group = grpEntry, minval = 0.1, step = 0.1)
-entryAtrLen  = input.int(14,     "Periodo ATR para niveles",               group = grpEntry, minval = 1)
+rrRatio      = input.float(3.0,  "Ratio R:R (TP = RR × Riesgo)",          group = grpEntry, minval = 1.0, step = 0.5)
+entryAtrLen  = input.int(14,     "Periodo ATR para offset etiquetas",      group = grpEntry, minval = 1)
+entryType    = input.string("Limit (FVG)", "Tipo de entrada",             group = grpEntry,
+     options = ["Limit (FVG)", "Mercado (cierre gatillo)", "Mercado (apertura siguiente vela)"])
 useEntryMid  = input.bool(false, "Entrada en mid FVG (si no: extremo)",    group = grpEntry)
 levelBars    = input.int(8,      "Longitud de líneas SL/BE/TP (velas)",    group = grpEntry, minval = 2, maxval = 50)
 
@@ -419,21 +446,35 @@ buySignal  = (_tlBreakUp and _bMcUp  <= entryWindow)
              or (crossUp  and _bTlUp  <= entryWindow and _bTlUp  > 0)
 
 // ── Precio de entrada (desde FVG más reciente) ────────────────────────
-sellEntryPx = useEntryMid ? (_lastBearTop + _lastBearBtm) / 2 : _lastBearBtm
-buyEntryPx  = useEntryMid ? (_lastBullTop + _lastBullBtm) / 2 : _lastBullTop
+_isMarketClose    = entryType == "Mercado (cierre gatillo)"
+_isMarketNextOpen = entryType == "Mercado (apertura siguiente vela)"
+_isMarket         = _isMarketClose or _isMarketNextOpen
+_entryTag         = _isMarket ? "MKT" : "LIMIT"
+_entryText        = _isMarket ? "Mercado: " : "Límite: "
 
-// ── Niveles de riesgo ─────────────────────────────────────────────────
-sellSL = sellEntryPx + _eAtr * slAtrMult
-sellBE = sellEntryPx - _eAtr * slAtrMult * 2.0
-sellTP = sellEntryPx - _eAtr * slAtrMult * rrRatio
+sellSignalExec = _isMarketNextOpen ? sellSignal[1] : sellSignal
+buySignalExec  = _isMarketNextOpen ? buySignal[1]  : buySignal
 
-buySL  = buyEntryPx  - _eAtr * slAtrMult
-buyBE  = buyEntryPx  + _eAtr * slAtrMult * 2.0
-buyTP  = buyEntryPx  + _eAtr * slAtrMult * rrRatio
+_sellLimitPx = useEntryMid ? (_lastBearTop + _lastBearBtm) / 2 : _lastBearBtm
+_buyLimitPx  = useEntryMid ? (_lastBullTop + _lastBullBtm) / 2 : _lastBullTop
+
+sellEntryPx = _isMarket ? open : _sellLimitPx
+buyEntryPx  = _isMarket ? open : _buyLimitPx
+
+// ── Niveles de riesgo (SL anclado al ATR Stop Loss Finder) ──────────────
+sellSL    = atrShortSL
+_sellRisk = math.abs(sellSL - sellEntryPx)
+sellBE    = sellEntryPx - _sellRisk * 2.0
+sellTP    = sellEntryPx - _sellRisk * rrRatio
+
+buySL     = atrLongSL
+_buyRisk  = math.abs(buyEntryPx - buySL)
+buyBE     = buyEntryPx + _buyRisk * 2.0
+buyTP     = buyEntryPx + _buyRisk * rrRatio
 
 // ── Dibujar señal SELL ────────────────────────────────────────────────
-if showEntries and sellSignal
-    _eTxt = "▼ SELL\nLímite: " + str.tostring(math.round(sellEntryPx, 5))
+if showEntries and sellSignalExec
+    _eTxt = "▼ SELL\n" + _entryText + str.tostring(math.round(sellEntryPx, 5))
     label.new(bar_index, high + _eAtr * 0.6,
          text      = _eTxt,
          style     = label.style_label_down,
@@ -442,14 +483,14 @@ if showEntries and sellSignal
          size      = size.small)
     if showLevels and not na(sellEntryPx)
         line.new(bar_index, sellEntryPx, bar_index + levelBars, sellEntryPx,
-             color = color.white,             style = line.style_solid,  width = 2)
+             color = color.black,             style = line.style_solid,  width = 2)
         line.new(bar_index, sellSL, bar_index + levelBars, sellSL,
              color = color.red,               style = line.style_dashed, width = 1)
         line.new(bar_index, sellBE, bar_index + levelBars, sellBE,
              color = color.new(color.orange,0), style = line.style_dashed, width = 1)
         line.new(bar_index, sellTP, bar_index + levelBars, sellTP,
              color = color.green,             style = line.style_dashed, width = 1)
-        label.new(bar_index + levelBars, sellEntryPx, "LIMIT",
+        label.new(bar_index + levelBars, sellEntryPx, _entryTag,
              style = label.style_label_left, color = color.new(color.white,  60),
              textcolor = color.white,  size = size.tiny)
         label.new(bar_index + levelBars, sellSL, "SL",
@@ -463,8 +504,8 @@ if showEntries and sellSignal
              textcolor = color.green,  size = size.tiny)
 
 // ── Dibujar señal BUY ─────────────────────────────────────────────────
-if showEntries and buySignal
-    _eTxt = "▲ BUY\nLímite: " + str.tostring(math.round(buyEntryPx, 5))
+if showEntries and buySignalExec
+    _eTxt = "▲ BUY\n" + _entryText + str.tostring(math.round(buyEntryPx, 5))
     label.new(bar_index, low - _eAtr * 0.6,
          text      = _eTxt,
          style     = label.style_label_up,
@@ -473,14 +514,14 @@ if showEntries and buySignal
          size      = size.small)
     if showLevels and not na(buyEntryPx)
         line.new(bar_index, buyEntryPx, bar_index + levelBars, buyEntryPx,
-             color = color.white,             style = line.style_solid,  width = 2)
+             color = color.black,             style = line.style_solid,  width = 2)
         line.new(bar_index, buySL, bar_index + levelBars, buySL,
              color = color.red,               style = line.style_dashed, width = 1)
         line.new(bar_index, buyBE, bar_index + levelBars, buyBE,
              color = color.new(color.orange,0), style = line.style_dashed, width = 1)
         line.new(bar_index, buyTP, bar_index + levelBars, buyTP,
              color = color.green,             style = line.style_dashed, width = 1)
-        label.new(bar_index + levelBars, buyEntryPx, "LIMIT",
+        label.new(bar_index + levelBars, buyEntryPx, _entryTag,
              style = label.style_label_left, color = color.new(color.white,  60),
              textcolor = color.white,  size = size.tiny)
         label.new(bar_index + levelBars, buySL, "SL",
@@ -493,5 +534,45 @@ if showEntries and buySignal
              style = label.style_label_left, color = color.new(color.green,  70),
              textcolor = color.green,  size = size.tiny)
 
-alertcondition(sellSignal, "Señal SELL", "Confluencia: TL break bajista + MACD bearish → Sell Limit en FVG")
-alertcondition(buySignal,  "Señal BUY",  "Confluencia: TL break alcista + MACD bullish → Buy Limit en FVG")
+alertcondition(sellSignalExec, "Señal SELL", "Confluencia confirmada → entrada SELL (según tipo configurado)")
+alertcondition(buySignalExec,  "Señal BUY",  "Confluencia confirmada → entrada BUY (según tipo configurado)")
+
+// ───────────────────────────────────────────────────────────────────────────
+// ► SECCIÓN 5 — AVERAGE TRUE RANGE STOP LOSS FINDER
+// ─────────────────────────────────────────────────────────────────────────
+// Calcula niveles dinámicos de Stop Loss basados en ATR:
+//  - atrShortSL: Stop Loss para posiciones SHORT (high + ATR × multiplicador)
+//  - atrLongSL:  Stop Loss para posiciones LONG  (low - ATR × multiplicador)
+// ───────────────────────────────────────────────────────────────────────────
+// ── Opciones de visualización (ya calculados en Pre-cálculo ATR SL) ──────
+atrSlShow      = input.bool(false, "Mostrar ATR Stop Loss Finder",  group = grpAtrSl)
+atrSlPriceLine = input.bool(true,  "Mostrar líneas de precio",      group = grpAtrSl)
+atrSlShowTable = input.bool(true,  "Mostrar tabla con valores",     group = grpAtrSl)
+
+atrSlColTable  = input.color(color.blue, "Color texto ATR",          group = grpAtrSl)
+atrSlColLong   = input.color(color.teal, "Color SL Long",            group = grpAtrSl, inline = "1")
+atrSlColShort  = input.color(color.red,  "Color SL Short",           group = grpAtrSl, inline = "2")
+
+// ── Dibujar líneas de precio ────────────────────────────────────────────
+plot(atrSlShow and atrSlPriceLine ? atrShortSL : na, 
+     title = "ATR Short Stop Loss", 
+     color = color.new(atrSlColShort, 20), 
+     linewidth = 2,
+     trackprice = true)
+
+plot(atrSlShow and atrSlPriceLine ? atrLongSL : na, 
+     title = "ATR Long Stop Loss", 
+     color = color.new(atrSlColLong, 20), 
+     linewidth = 2,
+     trackprice = true)
+
+// ── Tabla con valores en tiempo real ────────────────────────────────────
+var table atrTable = table.new(position.bottom_center, 3, 1, border_width = 3)
+
+if atrSlShow and atrSlShowTable and barstate.islast
+    table.cell(atrTable, 0, 0, "ATR: " + str.tostring(atrValue, "#.#"), 
+         text_color = atrSlColTable)
+    table.cell(atrTable, 1, 0, "Short SL: " + str.tostring(atrShortSL, "#.#####"), 
+         text_color = color.new(atrSlColShort, 0))
+    table.cell(atrTable, 2, 0, "Long SL: " + str.tostring(atrLongSL, "#.#####"), 
+         text_color = color.new(atrSlColLong, 0))
