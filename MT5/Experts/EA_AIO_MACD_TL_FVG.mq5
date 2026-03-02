@@ -65,6 +65,7 @@ input int             InpKZNYPMEnd    = 20;                // NY PM fin (hora UT
 input double          InpRiskPct      = 2.0;              // % de riesgo por trade (base)
 input double          InpMinRiskPct   = 0.5;              // % riesgo mínimo permitido
 input double          InpMaxRiskPct   = 3.0;              // % riesgo máximo permitido
+input double          InpCommission   = 0.0;              // Comisión por lote (un lado, divisa cuenta) [PositionSizer]
 input ulong           InpMagic        = 202602;           // Magic Number
 input int             InpSlippage     = 10;               // Slippage (points)
 
@@ -224,19 +225,23 @@ double CalcLotsByRisk(double riskPercent, double sl_pips)
     double riskMoney = balance * (riskPercent / 100.0);
     if(riskMoney <= 0) return SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
 
-    // Valor monetario de 1 pip en la divisa de la cuenta
-    double tickValue = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
-    double tickSize  = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
-    double pipSize   = PipToPrice(1.0);
+    // Valor monetario de 1 tick (pérdida) en la divisa de la cuenta — PositionSizer: UnitCost = TICK_VALUE_LOSS
+    double tickValueLoss = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE_LOSS);
+    double tickSize      = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
+    double pipSize       = PipToPrice(1.0);
 
-    if(tickValue <= 0 || tickSize <= 0 || pipSize <= 0)
+    if(tickValueLoss <= 0 || tickSize <= 0 || pipSize <= 0)
         return SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
 
-    double pipValue      = tickValue * (pipSize / tickSize);  // valor de 1 pip en cuenta
-    double slValueAcct   = pipValue * sl_pips;
-    if(slValueAcct <= 0) return SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+    // PositionSizer formula: lots = riskMoney / (slPriceDist * UnitCost / TickSize + 2 * commission)
+    // slPriceDist = sl_pips * pipSize
+    double pipValueLoss  = tickValueLoss * (pipSize / tickSize); // valor de 1 pip (pérdida) en cuenta
+    double slValueAcct   = pipValueLoss * sl_pips;               // costo del SL por lote
+    double commBothSides = 2.0 * InpCommission;                  // comisión entrada + salida
+    double denominator   = slValueAcct + commBothSides;
+    if(denominator <= 0) return SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
 
-    double rawLots = riskMoney / slValueAcct;
+    double rawLots = riskMoney / denominator;
 
     double minLot  = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
     double maxLot  = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX);
