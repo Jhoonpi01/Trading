@@ -37,7 +37,7 @@ input double          InpFvgGapPct    = 0.009;            // % mín gap para FVG
 
 //--- Input: ATR Stop Loss
 input int             InpAtrSlLen     = 14;               // ATR Period para SL
-input ENUM_MA_METHOD  InpAtrSmoothing = MODE_RMA;         // ATR Smoothing
+input ENUM_MA_METHOD  InpAtrSmoothing = MODE_SMMA;        // ATR Smoothing (RMA = Wilder = SMMA en MQL5)
 input double          InpAtrSlMult    = 1.5;              // ATR Multiplier para SL  [óptimo: 1.5]
 
 //--- Input: Señales
@@ -62,9 +62,14 @@ input int             InpKZNYPMStart  = 17;                // NY PM inicio (hora
 input int             InpKZNYPMEnd    = 20;                // NY PM fin (hora UTC)
 
 //--- Input: Money Management
-input double          InpRiskPct      = 2.0;              // % de riesgo por trade
+input double          InpRiskPct      = 2.0;              // % de riesgo por trade (base)
+input double          InpMinRiskPct   = 0.5;              // % riesgo mínimo permitido
+input double          InpMaxRiskPct   = 3.0;              // % riesgo máximo permitido
 input ulong           InpMagic        = 202602;           // Magic Number
 input int             InpSlippage     = 10;               // Slippage (points)
+
+//--- Input: Debug
+input bool            InpDebug        = true;             // Imprimir logs de diagnóstico
 
 //--- Global
 CTrade trade;
@@ -106,6 +111,11 @@ int OnInit()
     gLastBullTop = 0; gLastBullBtm = 0;
     gLastBearTop = 0; gLastBearBtm = 0;
     gBEActivatedBuy = false; gBEActivatedSell = false;
+
+    Print("EA AIO iniciado — Símbolo: ", _Symbol, "  TF: ", EnumToString(Period()),
+          "  EntryType: ", InpEntryType, "  RR: ", InpRRRatio,
+          "  KZ Asia: ", InpKZAsia, " (", InpKZAsiaStart, "-", InpKZAsiaEnd,
+          ")  London: ", InpKZLondon, " (", InpKZLDNStart, "-", InpKZLDNEnd, ")");
 
     return INIT_SUCCEEDED;
 }
@@ -181,27 +191,66 @@ int CountPositions(ENUM_POSITION_TYPE posType)
 }
 
 //+------------------------------------------------------------------+
-//| Calculate lot size based on risk                                  |
+//| Conversión entre pips y precio                                    |
 //+------------------------------------------------------------------+
-double CalcLotSize(double riskDistance)
+double PipToPrice(double pips)
 {
-    if(riskDistance <= 0) return SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+    double point   = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+    int    digits  = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
+    double pipUnit = (digits == 3 || digits == 5) ? point * 10.0 : point;
+    return pips * pipUnit;
+}
 
+double PriceToPips(double priceDistance)
+{
+    double point   = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+    int    digits  = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
+    double pipUnit = (digits == 3 || digits == 5) ? point * 10.0 : point;
+    if(pipUnit <= 0) return 0;
+    return priceDistance / pipUnit;
+}
+
+//+------------------------------------------------------------------+
+//| Calcula lotes por riesgo en % usando tick value (correcto JPY)   |
+//+------------------------------------------------------------------+
+double CalcLotsByRisk(double riskPercent, double sl_pips)
+{
+    if(sl_pips <= 0) return SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+
+    // Clampar riesgo dentro del rango configurado
+    riskPercent = MathMax(InpMinRiskPct, MathMin(InpMaxRiskPct, riskPercent));
+
+    double balance   = AccountInfoDouble(ACCOUNT_BALANCE);
+    double riskMoney = balance * (riskPercent / 100.0);
+    if(riskMoney <= 0) return SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+
+    // Valor monetario de 1 pip en la divisa de la cuenta
     double tickValue = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
     double tickSize  = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
-    double balance   = AccountInfoDouble(ACCOUNT_BALANCE);
-    double riskMoney = balance * InpRiskPct / 100.0;
+    double pipSize   = PipToPrice(1.0);
 
-    if(tickValue <= 0 || tickSize <= 0) return SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+    if(tickValue <= 0 || tickSize <= 0 || pipSize <= 0)
+        return SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
 
-    double lotSize = riskMoney / (riskDistance / tickSize * tickValue);
+    double pipValue      = tickValue * (pipSize / tickSize);  // valor de 1 pip en cuenta
+    double slValueAcct   = pipValue * sl_pips;
+    if(slValueAcct <= 0) return SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+
+    double rawLots = riskMoney / slValueAcct;
 
     double minLot  = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
     double maxLot  = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX);
-    double stepLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+    double step    = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
 
-    lotSize = MathMax(minLot, MathMin(maxLot, MathFloor(lotSize / stepLot) * stepLot));
-    return lotSize;
+    if(step  <= 0) step  = 0.01;
+    if(minLot <= 0) minLot = 0.01;
+    if(maxLot <= 0) maxLot = 100.0;
+
+    double lots = MathFloor(rawLots / step) * step;
+    lots = MathMax(minLot, MathMin(maxLot, lots));
+
+    int digitsVol = (int)MathMax(0.0, MathRound(-MathLog10(step)));
+    return NormalizeDouble(lots, digitsVol);
 }
 
 //+------------------------------------------------------------------+
@@ -248,6 +297,7 @@ void OnTick()
         return;
     }
     lastBar = currentBar;
+    if(InpDebug) Print("[Nueva barra] ", TimeToString(currentBar));
 
     // ── Obtener datos MACD ──
     double macdMain[], macdSignal[];
@@ -334,6 +384,20 @@ void OnTick()
     bool buySig  = (tlBreakUp && gBarsMcUp <= InpEntryWindow) ||
                    (crossUpNow && gBarsTlUp <= InpEntryWindow && gBarsTlUp > 0);
 
+    if(InpDebug)
+    {
+        MqlDateTime dbgDt; TimeGMT(dbgDt);
+        Print("[DEBUG] UTC=", dbgDt.hour, ":", dbgDt.min,
+              "  InKZ=", IsInKillZone(),
+              "  macdAbove=", macdAbove, "  crossUp=", crossUpNow, "  crossDn=", crossDnNow,
+              "  tlBreakUp=", tlBreakUp, "  tlBreakDn=", tlBreakDn,
+              "  barsTlUp=", gBarsTlUp, "  barsTlDn=", gBarsTlDn,
+              "  barsMcUp=", gBarsMcUp, "  barsMcDn=", gBarsMcDn,
+              "  buySig=", buySig, "  sellSig=", sellSig,
+              "  FVGbull=[", gLastBullBtm, "-", gLastBullTop,
+              "]  FVGbear=[", gLastBearBtm, "-", gLastBearTop, "]");
+    }
+
     // ── ATR SL Finder ──
     double curHigh = iHigh(_Symbol, PERIOD_CURRENT, 0);
     double curLow  = iLow(_Symbol, PERIOD_CURRENT, 0);
@@ -358,11 +422,25 @@ void OnTick()
         else
             entryPx = SymbolInfoDouble(_Symbol, SYMBOL_BID);
 
-        double sl    = shortSL;
-        double risk  = MathAbs(sl - entryPx);
-        if(risk <= 0) return;
-        double tp    = entryPx - risk * InpRRRatio;
-        double lots  = CalcLotSize(risk);
+        // Para Limit(FVG): anclar SL al entry del FVG para garantizar SL > entryPx
+        double sl;
+        if(InpEntryType == "Limit" && gLastBearBtm > 0)
+            sl = entryPx + atrSlBuf[0] * InpAtrSlMult;
+        else
+            sl = shortSL;
+
+        // Validación: SL debe estar por ENCIMA de la entrada (SELL)
+        if(sl <= entryPx)
+        {
+            if(InpDebug) Print("[SELL SKIP] SL=", sl, " <= Entry=", entryPx, " — stops inválidos");
+            goto skip_sell;
+        }
+
+        double risk    = MathAbs(sl - entryPx);
+        if(risk <= 0) goto skip_sell;
+        double sl_pips = PriceToPips(risk);
+        double tp      = entryPx - risk * InpRRRatio;
+        double lots    = CalcLotsByRisk(InpRiskPct, sl_pips);
 
         // Normalizar precios
         int digits = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
@@ -376,8 +454,9 @@ void OnTick()
             trade.Sell(lots, _Symbol, 0, sl, tp, "AIO SELL MKT");
 
         gBEActivatedSell = false;
-        Print("SELL signal: Entry=", entryPx, " SL=", sl, " TP=", tp, " Lots=", lots);
+        Print("SELL signal: Entry=", entryPx, " SL=", sl, " TP=", tp, " Lots=", lots, " SL_pips=", sl_pips);
     }
+    skip_sell:;
 
     // ── Ejecutar BUY ──
     if(buySig && CountPositions(POSITION_TYPE_BUY) == 0 && CountPositions(POSITION_TYPE_SELL) == 0)
@@ -388,11 +467,25 @@ void OnTick()
         else
             entryPx = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
 
-        double sl    = longSL;
-        double risk  = MathAbs(entryPx - sl);
+        // Para Limit(FVG): anclar SL al entry del FVG para garantizar SL < entryPx
+        double sl;
+        if(InpEntryType == "Limit" && gLastBullTop > 0)
+            sl = entryPx - atrSlBuf[0] * InpAtrSlMult;
+        else
+            sl = longSL;
+
+        // Validación: SL debe estar por DEBAJO de la entrada (BUY)
+        if(sl >= entryPx)
+        {
+            if(InpDebug) Print("[BUY SKIP] SL=", sl, " >= Entry=", entryPx, " — stops inválidos");
+            return;
+        }
+
+        double risk    = MathAbs(entryPx - sl);
         if(risk <= 0) return;
-        double tp    = entryPx + risk * InpRRRatio;
-        double lots  = CalcLotSize(risk);
+        double sl_pips = PriceToPips(risk);
+        double tp      = entryPx + risk * InpRRRatio;
+        double lots    = CalcLotsByRisk(InpRiskPct, sl_pips);
 
         int digits = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
         entryPx = NormalizeDouble(entryPx, digits);
@@ -405,7 +498,7 @@ void OnTick()
             trade.Buy(lots, _Symbol, 0, sl, tp, "AIO BUY MKT");
 
         gBEActivatedBuy = false;
-        Print("BUY signal: Entry=", entryPx, " SL=", sl, " TP=", tp, " Lots=", lots);
+        Print("BUY signal: Entry=", entryPx, " SL=", sl, " TP=", tp, " Lots=", lots, " SL_pips=", sl_pips);
     }
 }
 
