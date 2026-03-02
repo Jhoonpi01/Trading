@@ -420,6 +420,7 @@ void OnTick()
 
     // ── Ejecutar SELL ──
     if(sellSig && CountPositions(POSITION_TYPE_SELL) == 0 && CountPositions(POSITION_TYPE_BUY) == 0)
+    do  // do-while(false) permite usar break en lugar de goto
     {
         double entryPx;
         if(InpEntryType == "Limit" && gLastBearBtm > 0)
@@ -438,11 +439,11 @@ void OnTick()
         if(sl <= entryPx)
         {
             if(InpDebug) Print("[SELL SKIP] SL=", sl, " <= Entry=", entryPx, " — stops inválidos");
-            goto skip_sell;
+            break;
         }
 
         double risk    = MathAbs(sl - entryPx);
-        if(risk <= 0) goto skip_sell;
+        if(risk <= 0) break;
         double sl_pips = PriceToPips(risk);
         double tp      = entryPx - risk * InpRRRatio;
         double lots    = CalcLotsByRisk(InpRiskPct, sl_pips);
@@ -461,7 +462,7 @@ void OnTick()
         gBEActivatedSell = false;
         Print("SELL signal: Entry=", entryPx, " SL=", sl, " TP=", tp, " Lots=", lots, " SL_pips=", sl_pips);
     }
-    skip_sell:;
+    while(false);
 
     // ── Ejecutar BUY ──
     if(buySig && CountPositions(POSITION_TYPE_BUY) == 0 && CountPositions(POSITION_TYPE_SELL) == 0)
