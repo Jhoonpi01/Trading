@@ -5,6 +5,13 @@
 //   · CM_MacD_Ult_MTF        — ChrisMoody (adaptado a v5)
 //   · iFVG (BPR)             — © Algoryze  (adaptado a v5)
 //   · Trendlines with Breaks — © LuxAlgo   (v5 sin cambios)
+// ───────────────────────────────────────────────────────────────────────────
+// PARÁMETROS ÓPTIMOS (backtest USDJPY — AIO_Strategy_Backtest.ipynb)
+//   TF recomendado : M30
+//   RR Ratio       : 4.0
+//   ATR SL Mult    : 1.5
+//   Entry Type     : Limit (FVG)
+//   Entry Window   : 3
 // ═══════════════════════════════════════════════════════════════════════════
 //@version=6
 indicator("AIO: MACD + iFVG/BPR + Trendlines",
@@ -367,7 +374,7 @@ grpAtrSl = "── ATR Stop Loss Finder ──"
 atrSlLength     = input.int(14,       "Periodo ATR",               group = grpAtrSl, minval = 1)
 atrSlSmoothing  = input.string("RMA", "Tipo de suavizado",        group = grpAtrSl,
      options = ["RMA", "SMA", "EMA", "WMA"])
-atrSlMult       = input.float(1.5,    "Multiplicador ATR",         group = grpAtrSl, minval = 0.1, step = 0.1)
+atrSlMult       = input.float(1.5,    "Multiplicador ATR",         group = grpAtrSl, minval = 0.1, step = 0.1)  // óptimo: 1.5
 
 atrSlMaFunction(source, length) =>
     float result = na
@@ -401,7 +408,7 @@ grpEntry = "── Señales de Entrada ──"
 showEntries  = input.bool(true,  "Activar señales de entrada",              group = grpEntry)
 entryWindow  = input.int(3,      "Ventana de confirmación (velas)",         group = grpEntry, minval = 1, maxval = 10)
 showLevels   = input.bool(true,  "Mostrar SL / BE / TP",                   group = grpEntry)
-rrRatio      = input.float(3.0,  "Ratio R:R (TP = RR × Riesgo)",          group = grpEntry, minval = 1.0, step = 0.5)
+rrRatio      = input.float(4.0,  "Ratio R:R (TP = RR × Riesgo)",          group = grpEntry, minval = 1.0, step = 0.5)  // óptimo: 4.0
 entryAtrLen  = input.int(14,     "Periodo ATR para offset etiquetas",      group = grpEntry, minval = 1)
 entryType    = input.string("Limit (FVG)", "Tipo de entrada",             group = grpEntry,
      options = ["Limit (FVG)", "Mercado (cierre gatillo)", "Mercado (apertura siguiente vela)"])

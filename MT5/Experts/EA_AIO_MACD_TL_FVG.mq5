@@ -5,9 +5,12 @@
 //|  Lógica:                                                         |
 //|   1. Trendline dinámica con pendiente ATR/Stdev sobre pivots     |
 //|   2. Ruptura de TL + cruce MACD en ventana de N velas            |
-//|   3. Entrada en extremo del último FVG o a mercado               |
+//|   3. Entrada: Limit(FVG) / Mercado(cierre) / Mercado(sig.vela)  |
 //|   4. SL = ATR Stop Loss Finder (high+ATR / low-ATR)             |
 //|   5. BE y TP proporcionales al riesgo real                       |
+//|------------------------------------------------------------------||
+//|  PARÁMETROS ÓPTIMOS — backtest USDJPY (AIO_Strategy_Backtest)   |
+//|    TF  : M30   RR : 4.0   ATR Mult : 1.5   Entry : Limit(FVG)  |
 //+------------------------------------------------------------------+
 #property copyright "AIO Trade"
 #property link      ""
@@ -35,14 +38,14 @@ input double          InpFvgGapPct    = 0.009;            // % mín gap para FVG
 //--- Input: ATR Stop Loss
 input int             InpAtrSlLen     = 14;               // ATR Period para SL
 input ENUM_MA_METHOD  InpAtrSmoothing = MODE_RMA;         // ATR Smoothing
-input double          InpAtrSlMult    = 1.5;              // ATR Multiplier para SL
+input double          InpAtrSlMult    = 1.5;              // ATR Multiplier para SL  [óptimo: 1.5]
 
 //--- Input: Señales
 input int             InpEntryWindow  = 3;                // Ventana de confirmación (velas)
-input double          InpRRRatio      = 3.0;              // Ratio R:R
+input double          InpRRRatio      = 4.0;              // Ratio R:R  [óptimo: 4.0]
 input double          InpBEMult       = 2.0;              // Multiplicador Break Even
 input bool            InpUseBE        = true;             // Activar Break Even
-input string          InpEntryType    = "Limit";          // Tipo entrada: Limit / Market
+input string          InpEntryType    = "Limit";          // Tipo entrada: Limit / Market / NextOpen  [óptimo: Limit]
 
 //--- Input: Kill Zones (horas UTC)
 input bool            InpKZAsia       = true;              // Activar Asia KZ

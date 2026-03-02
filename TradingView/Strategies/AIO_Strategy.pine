@@ -8,6 +8,13 @@
 //   3. Entrada en FVG/BPR o a mercado
 //   4. SL = ATR Stop Loss Finder (high + ATR*mult  /  low − ATR*mult)
 //   5. BE y TP proporcionales al riesgo real
+// ───────────────────────────────────────────────────────────────────────────
+// PARÁMETROS ÓPTIMOS (backtest USDJPY — AIO_Strategy_Backtest.ipynb)
+//   TF recomendado : M30
+//   RR Ratio       : 4.0
+//   ATR SL Mult    : 1.5
+//   Entry Type     : Limit (FVG)
+//   Entry Window   : 3
 // ═══════════════════════════════════════════════════════════════════════════
 //@version=6
 strategy("AIO Strategy: MACD + iFVG + TL Breaks",
@@ -221,7 +228,7 @@ bgcolor(kzShowBG and inNYPM  ? _kzNYPMClr : na, title = "BG NY PM")
 grpEntry = "── Señales de Entrada ──"
 
 entryWindow = input.int(3,      "Ventana de confirmación (velas)",  group = grpEntry, minval = 1, maxval = 10)
-rrRatio     = input.float(3.0,  "Ratio R:R (TP = RR × Riesgo)",   group = grpEntry, minval = 1.0, step = 0.5)
+rrRatio     = input.float(4.0,  "Ratio R:R (TP = RR × Riesgo)",   group = grpEntry, minval = 1.0, step = 0.5)  // óptimo: 4.0
 entryType   = input.string("Limit (FVG)", "Tipo de entrada",      group = grpEntry,
      options = ["Limit (FVG)", "Mercado (cierre)", "Mercado (apertura sig. vela)"])
 useBE       = input.bool(true,  "Activar Break Even",              group = grpEntry)
